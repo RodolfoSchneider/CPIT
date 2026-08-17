@@ -1868,10 +1868,10 @@ function pgPortfolioOverview() {
     const fmt = v => v >= 1000000 ? '€' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '€' + Math.round(v/1000) + 'K' : '€' + v;
 
     const custRows = custData.map(({c, arr, mauAvg, consRate, custPipeline, atRisk}) => `
-    <div class="d-table-row" style="grid-template-columns:1.6fr .7fr .9fr 1.1fr 1.4fr 1.4fr .8fr">
+    <div class="d-table-row" style="grid-template-columns:1.4fr .6fr 1.6fr 1fr 1.4fr 1.4fr .8fr">
         <div><div class="cust-name">${c.name}</div><div class="cust-meta">${c.industry}</div></div>
         <div>${c.region}</div>
-        <div style="font-weight:600">${fmt(arr)}</div>
+        <div><div style="font-weight:700;color:var(--primary);font-size:13px;margin-bottom:3px">${c.solutions.length} sub-solution${c.solutions.length>1?'s':''}</div><div style="display:flex;flex-wrap:wrap;gap:3px">${c.solutions.map(s=>`<span class="sol-link" style="font-size:11px;padding:2px 6px">${s}</span>`).join('')}</div></div>
         <div style="font-weight:600;color:var(--primary)">${fmt(custPipeline)}</div>
         <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${mauAvg}%;${mauAvg<50?'background:#e87722':''}"></div></div><span class="prog-pct">${mauAvg}%</span></div>
         <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${consRate}%;background:${consRate>=70?'#4caf74':consRate>=50?'#e87722':'#c5221f'}"></div></div><span class="prog-pct">${consRate}%</span></div>
@@ -1891,8 +1891,8 @@ function pgPortfolioOverview() {
     </div>
     <div class="s-card">
         <div class="s-title">Customer Portfolio</div>
-        <div class="d-table-head" style="grid-template-columns:1.6fr .7fr .9fr 1.1fr 1.4fr 1.4fr .8fr">
-            <div>Customer</div><div>Region</div><div>ARR</div><div>Pre-Close Pipeline</div><div>Adoption Rate</div><div>Consumption Rate</div><div>Health</div>
+        <div class="d-table-head" style="grid-template-columns:1.4fr .6fr 1.6fr 1fr 1.4fr 1.4fr .8fr">
+            <div>Customer</div><div>Region</div><div>Sub-Solutions</div><div>Pre-Close Pipeline</div><div>Adoption Rate</div><div>Consumption Rate</div><div>Health</div>
         </div>
         ${custRows}
     </div>`;
