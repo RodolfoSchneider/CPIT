@@ -574,9 +574,9 @@
 <script>
 /* ─── DATA ──────────────────────────────────────────────── */
 const CUSTOMERS = [
-    { name:'Volkswagen',   industry:'Automotive',     region:'EMEA', opp:'0300110001', solutions:['Cloud ERP Private'] },
-    { name:'Space X',      industry:'Aerospace',      region:'AMER', opp:'0300120001', solutions:['Core HR and Payroll public','Business Network'] },
-    { name:'Amazon',       industry:'Retail / Cloud', region:'AMER', opp:'0300130001', solutions:['Cloud ERP Private'] },
+    { name:'Volkswagen',   industry:'Automotive',     region:'EMEA', opp:'0300110001', solutions:['Cloud ERP Private','Signavio Process Intelligence','SAP BTP Extension Suite'] },
+    { name:'Space X',      industry:'Aerospace',      region:'AMER', opp:'0300120001', solutions:['Core HR and Payroll public','Business Network','Cloud ERP Public'] },
+    { name:'Amazon',       industry:'Retail / Cloud', region:'AMER', opp:'0300130001', solutions:['Cloud ERP Private','SAP Ariba','SAP Concur'] },
 ];
 
 const PLAN_DATA = {
@@ -589,6 +589,26 @@ const PLAN_DATA = {
             aiUnits:[
                 { sub:'Cloud ERP Private', unit:'Joule for Finance',        driver:'Reduce compliance and risk management cost' },
                 { sub:'Cloud ERP Private', unit:'Predictive Accounting AI', driver:'Improve user experience and interface solutions' },
+            ]
+        },
+        'Signavio Process Intelligence': {
+            valueDriver:'Increase operational efficiency', implementedBy:'SAP implementation',
+            sysPartner:'SAP', partnerContact:'Klaus Weber',
+            kickOff:'04/01/2027', projGoLive:'09/15/2027',
+            goLiveStrategy:'Big bang go-live', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'Signavio Process Intelligence', unit:'AI Process Recommender',  driver:'Increase operational efficiency' },
+                { sub:'Signavio Process Intelligence', unit:'Process Conformance AI',  driver:'Reduce compliance and risk management cost' },
+            ]
+        },
+        'SAP BTP Extension Suite': {
+            valueDriver:'Reduce total cost of ownership', implementedBy:'Partner implementation',
+            sysPartner:'Accenture', partnerContact:'Maria Schmidt',
+            kickOff:'03/01/2027', projGoLive:'10/01/2027',
+            goLiveStrategy:'Phased rollout', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'SAP BTP Extension Suite', unit:'Joule for Developers',      driver:'Increase operational efficiency' },
+                { sub:'SAP BTP Extension Suite', unit:'AI-Assisted Integration',   driver:'Reduce total cost of ownership' },
             ]
         }
     },
@@ -612,6 +632,16 @@ const PLAN_DATA = {
                 { sub:'Business Network', unit:'AI Supplier Discovery',    driver:'Reduce total cost of ownership' },
                 { sub:'Business Network', unit:'Intelligent Invoice Match', driver:'Increase operational efficiency' },
             ]
+        },
+        'Cloud ERP Public': {
+            valueDriver:'Reduce total cost of ownership', implementedBy:'SAP implementation',
+            sysPartner:'SAP', partnerContact:'Sarah Connor',
+            kickOff:'06/01/2027', projGoLive:'01/15/2028',
+            goLiveStrategy:'Big bang go-live', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'Cloud ERP Public', unit:'Joule for Finance',        driver:'Increase operational efficiency' },
+                { sub:'Cloud ERP Public', unit:'Predictive Accounting AI', driver:'Improve customer satisfaction' },
+            ]
         }
     },
     2: {
@@ -624,18 +654,59 @@ const PLAN_DATA = {
                 { sub:'Cloud ERP Private', unit:'Joule for Finance',      driver:'Reduce compliance and risk management cost' },
                 { sub:'Cloud ERP Private', unit:'AI Cash Flow Predictor', driver:'Improve customer satisfaction' },
             ]
+        },
+        'SAP Ariba': {
+            valueDriver:'Reduce total cost of ownership', implementedBy:'Partner implementation',
+            sysPartner:'Deloitte', partnerContact:'Alex Johnson',
+            kickOff:'02/15/2027', projGoLive:'09/01/2027',
+            goLiveStrategy:'Phased rollout', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'SAP Ariba', unit:'AI Supplier Discovery',  driver:'Reduce total cost of ownership' },
+                { sub:'SAP Ariba', unit:'Intelligent Sourcing',   driver:'Increase operational efficiency' },
+            ]
+        },
+        'SAP Concur': {
+            valueDriver:'Increase operational efficiency', implementedBy:'SAP implementation',
+            sysPartner:'IBM', partnerContact:'Alex Johnson',
+            kickOff:'03/01/2027', projGoLive:'08/01/2027',
+            goLiveStrategy:'Big bang go-live', aiUseCases:'No',
+            aiUnits:[
+                { sub:'SAP Concur', unit:'Expense AI Assistant',      driver:'Increase operational efficiency' },
+                { sub:'SAP Concur', unit:'Travel Policy Compliance',  driver:'Reduce compliance and risk management cost' },
+            ]
         }
     }
 };
 
 const LPR_DATA = {
-    0: { 'Cloud ERP Private': [
-        { id:'LPR-10001', name:'S/4HANA Cloud Private Edition',
-          goLiveStrategy:'Regional go-lives planned', onboardingType:'Full onboarding',
-          onboardingStatus:'In progress', implParty:'Partner', implPartner:'Accenture',
-          kickoff:'02/15/2027', plannedGoLive:'08/20/2027', confirmedGoLive:'',
-          implStatus:'Green', statusReason:'All milestones on track, no open risks.', validatedHandover:'No' }
-    ]},
+    0: {
+        'Cloud ERP Private': [
+            { id:'LPR-10001', name:'S/4HANA Cloud Private Edition',
+              goLiveStrategy:'Regional go-lives planned', onboardingType:'Full onboarding',
+              onboardingStatus:'In progress', implParty:'Partner', implPartner:'Accenture',
+              kickoff:'02/15/2027', plannedGoLive:'08/20/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'All milestones on track, no open risks.', validatedHandover:'No' }
+        ],
+        'Signavio Process Intelligence': [
+            { id:'LPR-12001', name:'Signavio Process Intelligence',
+              goLiveStrategy:'Big bang go-live', onboardingType:'Guided onboarding',
+              onboardingStatus:'In progress', implParty:'SAP', implPartner:'SAP',
+              kickoff:'04/01/2027', plannedGoLive:'09/15/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'Setup phase completed, training ongoing.', validatedHandover:'No' }
+        ],
+        'SAP BTP Extension Suite': [
+            { id:'LPR-13001', name:'SAP BTP Integration Suite',
+              goLiveStrategy:'Phased rollout', onboardingType:'Full onboarding',
+              onboardingStatus:'In progress', implParty:'Partner', implPartner:'Accenture',
+              kickoff:'03/01/2027', plannedGoLive:'10/01/2027', confirmedGoLive:'',
+              implStatus:'Yellow', statusReason:'BTP environment setup delayed by 2 weeks.', validatedHandover:'No' },
+            { id:'LPR-13002', name:'SAP BTP Extension Factory',
+              goLiveStrategy:'Phased rollout', onboardingType:'Guided onboarding',
+              onboardingStatus:'Not started', implParty:'Partner', implPartner:'Accenture',
+              kickoff:'05/01/2027', plannedGoLive:'11/01/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'Dependencies on Integration Suite on track.', validatedHandover:'No' }
+        ]
+    },
     1: {
         'Core HR and Payroll public': [
             { id:'LPR-31001', name:'SAP SuccessFactors HCM Suite',
@@ -652,23 +723,51 @@ const LPR_DATA = {
         'Business Network': [
             { id:'LPR-32001', name:'SAP Business Network',
               goLiveStrategy:'Phased rollout', onboardingType:'Self onboarding',
-              onboardingStatus:'In progress', implParty:'SAP', implPartner:'IBM',
+              onboardingStatus:'In progress', implParty:'SAP', implPartner:'BearingPoint',
               kickoff:'04/15/2027', plannedGoLive:'11/15/2027', confirmedGoLive:'',
               implStatus:'Green', statusReason:'On track, all milestones met.', validatedHandover:'No' }
+        ],
+        'Cloud ERP Public': [
+            { id:'LPR-21001', name:'S/4HANA Cloud Public Edition',
+              goLiveStrategy:'Big bang go-live', onboardingType:'Full onboarding',
+              onboardingStatus:'In progress', implParty:'SAP', implPartner:'SAP',
+              kickoff:'06/01/2027', plannedGoLive:'01/15/2028', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'Fit-to-standard workshops completed.', validatedHandover:'No' }
         ]
     },
-    2: { 'Cloud ERP Private': [
-        { id:'LPR-11001', name:'S/4HANA Cloud Private Edition',
-          goLiveStrategy:'Parallel run', onboardingType:'Full onboarding',
-          onboardingStatus:'Completed', implParty:'Partner', implPartner:'IBM',
-          kickoff:'01/20/2027', plannedGoLive:'07/01/2027', confirmedGoLive:'07/01/2027',
-          implStatus:'Green', statusReason:'Go-live completed successfully.', validatedHandover:'Yes' },
-        { id:'LPR-11002', name:'SAP BTP Extension Suite',
-          goLiveStrategy:'Parallel run', onboardingType:'Guided onboarding',
-          onboardingStatus:'In progress', implParty:'Partner', implPartner:'IBM',
-          kickoff:'02/01/2027', plannedGoLive:'08/01/2027', confirmedGoLive:'',
-          implStatus:'Green', statusReason:'Minor customizations pending.', validatedHandover:'No' }
-    ]}
+    2: {
+        'Cloud ERP Private': [
+            { id:'LPR-11001', name:'S/4HANA Cloud Private Edition',
+              goLiveStrategy:'Parallel run', onboardingType:'Full onboarding',
+              onboardingStatus:'Completed', implParty:'Partner', implPartner:'IBM',
+              kickoff:'01/20/2027', plannedGoLive:'07/01/2027', confirmedGoLive:'07/01/2027',
+              implStatus:'Green', statusReason:'Go-live completed successfully.', validatedHandover:'Yes' },
+            { id:'LPR-11002', name:'SAP BTP Extension Suite',
+              goLiveStrategy:'Parallel run', onboardingType:'Guided onboarding',
+              onboardingStatus:'In progress', implParty:'Partner', implPartner:'IBM',
+              kickoff:'02/01/2027', plannedGoLive:'08/01/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'Minor customizations pending.', validatedHandover:'No' }
+        ],
+        'SAP Ariba': [
+            { id:'LPR-41001', name:'SAP Ariba Procurement',
+              goLiveStrategy:'Phased rollout', onboardingType:'Full onboarding',
+              onboardingStatus:'In progress', implParty:'Partner', implPartner:'Deloitte',
+              kickoff:'02/15/2027', plannedGoLive:'09/01/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'Wave 1 countries on track.', validatedHandover:'No' },
+            { id:'LPR-41002', name:'SAP Ariba Sourcing',
+              goLiveStrategy:'Phased rollout', onboardingType:'Guided onboarding',
+              onboardingStatus:'At risk', implParty:'Partner', implPartner:'Deloitte',
+              kickoff:'03/15/2027', plannedGoLive:'10/15/2027', confirmedGoLive:'',
+              implStatus:'Yellow', statusReason:'Supplier onboarding behind schedule.', validatedHandover:'No' }
+        ],
+        'SAP Concur': [
+            { id:'LPR-42001', name:'SAP Concur Travel & Expense',
+              goLiveStrategy:'Big bang go-live', onboardingType:'Self onboarding',
+              onboardingStatus:'Completed', implParty:'SAP', implPartner:'SAP',
+              kickoff:'03/01/2027', plannedGoLive:'08/01/2027', confirmedGoLive:'08/01/2027',
+              implStatus:'Green', statusReason:'Go-live successful, users onboarded.', validatedHandover:'Yes' }
+        ]
+    }
 };
 
 
@@ -680,16 +779,50 @@ const CONS_DATA = {
         {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q2 2028',acv:43000,predCacv:43000,finalMau:3,plannedCacv:43000},
         {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q3 2028',acv:96000,predCacv:96000,finalMau:4,plannedCacv:96000},
         {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q4 2028',acv:81500,predCacv:81500,finalMau:9,plannedCacv:81500},
+        {sub:'Signavio Process Intelligence',lprId:'LPR-12001',lprName:'Signavio Process Intelligence',quarter:'Q4 2027',acv:28000,predCacv:28000,finalMau:6,plannedCacv:28000},
+        {sub:'Signavio Process Intelligence',lprId:'LPR-12001',lprName:'Signavio Process Intelligence',quarter:'Q1 2028',acv:31000,predCacv:31000,finalMau:9,plannedCacv:31000},
+        {sub:'Signavio Process Intelligence',lprId:'LPR-12001',lprName:'Signavio Process Intelligence',quarter:'Q2 2028',acv:34000,predCacv:34000,finalMau:11,plannedCacv:34000},
+        {sub:'Signavio Process Intelligence',lprId:'LPR-12001',lprName:'Signavio Process Intelligence',quarter:'Q3 2028',acv:36500,predCacv:36500,finalMau:13,plannedCacv:36500},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13001',lprName:'SAP BTP Integration Suite',quarter:'Q4 2027',acv:19000,predCacv:19000,finalMau:4,plannedCacv:19000},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13001',lprName:'SAP BTP Integration Suite',quarter:'Q1 2028',acv:22000,predCacv:22000,finalMau:7,plannedCacv:22000},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13001',lprName:'SAP BTP Integration Suite',quarter:'Q2 2028',acv:25000,predCacv:25000,finalMau:9,plannedCacv:25000},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13002',lprName:'SAP BTP Extension Factory',quarter:'Q1 2028',acv:15000,predCacv:15000,finalMau:5,plannedCacv:15000},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13002',lprName:'SAP BTP Extension Factory',quarter:'Q2 2028',acv:17500,predCacv:17500,finalMau:8,plannedCacv:17500},
+        {sub:'SAP BTP Extension Suite',lprId:'LPR-13002',lprName:'SAP BTP Extension Factory',quarter:'Q3 2028',acv:20000,predCacv:20000,finalMau:10,plannedCacv:20000},
     ],
     1:[
         {sub:'Core HR and Payroll public',lprId:'LPR-31001',lprName:'SAP SuccessFactors HCM Suite',quarter:'Q4 2027',acv:42000,predCacv:42000,finalMau:5,plannedCacv:42000},
         {sub:'Core HR and Payroll public',lprId:'LPR-31001',lprName:'SAP SuccessFactors HCM Suite',quarter:'Q1 2028',acv:45000,predCacv:45000,finalMau:7,plannedCacv:45000},
+        {sub:'Core HR and Payroll public',lprId:'LPR-31001',lprName:'SAP SuccessFactors HCM Suite',quarter:'Q2 2028',acv:48000,predCacv:48000,finalMau:9,plannedCacv:48000},
+        {sub:'Core HR and Payroll public',lprId:'LPR-31002',lprName:'SAP Payroll',quarter:'Q4 2027',acv:19500,predCacv:19500,finalMau:6,plannedCacv:19500},
+        {sub:'Core HR and Payroll public',lprId:'LPR-31002',lprName:'SAP Payroll',quarter:'Q1 2028',acv:21000,predCacv:21000,finalMau:8,plannedCacv:21000},
+        {sub:'Core HR and Payroll public',lprId:'LPR-31002',lprName:'SAP Payroll',quarter:'Q2 2028',acv:23000,predCacv:23000,finalMau:10,plannedCacv:23000},
         {sub:'Business Network',lprId:'LPR-32001',lprName:'SAP Business Network',quarter:'Q4 2027',acv:18000,predCacv:18000,finalMau:8,plannedCacv:18000},
+        {sub:'Business Network',lprId:'LPR-32001',lprName:'SAP Business Network',quarter:'Q1 2028',acv:20000,predCacv:20000,finalMau:10,plannedCacv:20000},
+        {sub:'Business Network',lprId:'LPR-32001',lprName:'SAP Business Network',quarter:'Q2 2028',acv:22500,predCacv:22500,finalMau:12,plannedCacv:22500},
+        {sub:'Cloud ERP Public',lprId:'LPR-21001',lprName:'S/4HANA Cloud Public Edition',quarter:'Q1 2028',acv:55000,predCacv:55000,finalMau:6,plannedCacv:55000},
+        {sub:'Cloud ERP Public',lprId:'LPR-21001',lprName:'S/4HANA Cloud Public Edition',quarter:'Q2 2028',acv:58000,predCacv:58000,finalMau:9,plannedCacv:58000},
+        {sub:'Cloud ERP Public',lprId:'LPR-21001',lprName:'S/4HANA Cloud Public Edition',quarter:'Q3 2028',acv:61000,predCacv:61000,finalMau:12,plannedCacv:61000},
+        {sub:'Cloud ERP Public',lprId:'LPR-21001',lprName:'S/4HANA Cloud Public Edition',quarter:'Q4 2028',acv:64500,predCacv:64500,finalMau:14,plannedCacv:64500},
     ],
     2:[
         {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q2 2027',acv:122000,predCacv:122000,finalMau:8,plannedCacv:122000},
         {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q3 2027',acv:118000,predCacv:118000,finalMau:6,plannedCacv:118000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q4 2027',acv:125000,predCacv:125000,finalMau:10,plannedCacv:125000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q1 2028',acv:131000,predCacv:131000,finalMau:11,plannedCacv:131000},
         {sub:'Cloud ERP Private',lprId:'LPR-11002',lprName:'SAP BTP Extension Suite',quarter:'Q3 2027',acv:45000,predCacv:45000,finalMau:4,plannedCacv:45000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11002',lprName:'SAP BTP Extension Suite',quarter:'Q4 2027',acv:48000,predCacv:48000,finalMau:6,plannedCacv:48000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11002',lprName:'SAP BTP Extension Suite',quarter:'Q1 2028',acv:51000,predCacv:51000,finalMau:8,plannedCacv:51000},
+        {sub:'SAP Ariba',lprId:'LPR-41001',lprName:'SAP Ariba Procurement',quarter:'Q3 2027',acv:38000,predCacv:38000,finalMau:7,plannedCacv:38000},
+        {sub:'SAP Ariba',lprId:'LPR-41001',lprName:'SAP Ariba Procurement',quarter:'Q4 2027',acv:41000,predCacv:41000,finalMau:10,plannedCacv:41000},
+        {sub:'SAP Ariba',lprId:'LPR-41001',lprName:'SAP Ariba Procurement',quarter:'Q1 2028',acv:44000,predCacv:44000,finalMau:12,plannedCacv:44000},
+        {sub:'SAP Ariba',lprId:'LPR-41002',lprName:'SAP Ariba Sourcing',quarter:'Q4 2027',acv:24000,predCacv:24000,finalMau:5,plannedCacv:24000},
+        {sub:'SAP Ariba',lprId:'LPR-41002',lprName:'SAP Ariba Sourcing',quarter:'Q1 2028',acv:27000,predCacv:27000,finalMau:8,plannedCacv:27000},
+        {sub:'SAP Ariba',lprId:'LPR-41002',lprName:'SAP Ariba Sourcing',quarter:'Q2 2028',acv:29500,predCacv:29500,finalMau:10,plannedCacv:29500},
+        {sub:'SAP Concur',lprId:'LPR-42001',lprName:'SAP Concur Travel & Expense',quarter:'Q3 2027',acv:32000,predCacv:32000,finalMau:9,plannedCacv:32000},
+        {sub:'SAP Concur',lprId:'LPR-42001',lprName:'SAP Concur Travel & Expense',quarter:'Q4 2027',acv:33500,predCacv:33500,finalMau:11,plannedCacv:33500},
+        {sub:'SAP Concur',lprId:'LPR-42001',lprName:'SAP Concur Travel & Expense',quarter:'Q1 2028',acv:35000,predCacv:35000,finalMau:13,plannedCacv:35000},
+        {sub:'SAP Concur',lprId:'LPR-42001',lprName:'SAP Concur Travel & Expense',quarter:'Q2 2028',acv:37000,predCacv:37000,finalMau:15,plannedCacv:37000},
     ],
 };
 
@@ -1771,8 +1904,8 @@ function pgReports() {
 ═══════════════════════════════════════════════════════════ */
 function getMgmtData() {
     const base = KPI_BY_REGION[mgmtRegion] || KPI_BY_REGION['All Regions'];
-    const sFact = {'All Solution Areas':1,'Cloud ERP':0.45,'Business Network':0.22,'HR & Payroll':0.24,'Signavio':0.09}[mgmtSolution]||1;
-    const ssFact= {'All Sub-Solution Areas':1,'Private':0.52,'Public':0.35,'Hybrid':0.13}[mgmtSubSol]||1;
+    const sFact = {'All Solution Areas':1,'Cloud ERP':0.42,'HR & Payroll':0.20,'Business Network':0.18,'Signavio':0.10,'Spend Management':0.10}[mgmtSolution]||1;
+    const ssFact= {'All Sub-Solution Areas':1,'Cloud ERP Private':0.28,'Cloud ERP Public':0.14,'SAP BTP Extension Suite':0.10,'Core HR and Payroll public':0.15,'Business Network':0.12,'Signavio Process Intelligence':0.08,'SAP Ariba':0.08,'SAP Concur':0.05}[mgmtSubSol]||1;
     const f = sFact * ssFact;
     const s = n => Math.max(0, Math.round(n * f));
     const p = (n,d) => d>0 ? +((n/d)*100).toFixed(1) : 0;
@@ -1826,8 +1959,8 @@ function pgMgmtDashboard() {
 
     const filterBar=`<div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:11px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px">
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Region ${mkDrop('region',['All Regions','APAC','Americas','EMEA','MEE'],mgmtRegion)}</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Solution Area ${mkDrop('solution',['All Solution Areas','Cloud ERP','Business Network','HR & Payroll','Signavio'],mgmtSolution)}</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Sub-Solution Area ${mkDrop('subsolution',['All Sub-Solution Areas','Private','Public','Hybrid'],mgmtSubSol)}</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Solution Area ${mkDrop('solution',['All Solution Areas','Cloud ERP','HR & Payroll','Business Network','Signavio','Spend Management'],mgmtSolution)}</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Sub-Solution Area ${mkDrop('subsolution',['All Sub-Solution Areas','Cloud ERP Private','Cloud ERP Public','SAP BTP Extension Suite','Core HR and Payroll public','Business Network','Signavio Process Intelligence','SAP Ariba','SAP Concur'],mgmtSubSol)}</label>
         <button onclick="resetMgmtFilters()" style="margin-left:auto;background:none;border:1px solid var(--border);padding:5px 14px;border-radius:4px;cursor:pointer;font-size:13px;color:var(--text-2)">Reset</button>
     </div>`;
 
@@ -2141,12 +2274,14 @@ function pgSingleAdoptionPlan(c, idx) {
 
     const ALL_SUBS = [
         'All Sub-Solutions',
+        'Cloud ERP Private',
+        'Cloud ERP Public',
+        'SAP BTP Extension Suite',
         'Core HR and Payroll public',
         'Business Network',
-        'Cloud ERP Private',
-        'SAP Payroll',
         'Signavio Process Intelligence',
-        'SAP SuccessFactors',
+        'SAP Ariba',
+        'SAP Concur',
     ];
     const solutionsToShow = singleSubFilter === 'All Sub-Solutions'
         ? c.solutions
