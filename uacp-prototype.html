@@ -1844,10 +1844,12 @@ function pgPortfolioOverview() {
 
     // Per-customer stats derived from live data
     const custData = CUSTOMERS.map((c, idx) => {
-        const rows   = CONS_DATA[idx] || [];
-        const arr    = rows.reduce((s,r) => s + r.predCacv, 0);
-        const mauAvg = rows.length ? Math.round(rows.reduce((s,r) => s + r.finalMau, 0) / rows.length) : 0;
-        const lprMap = LPR_DATA[idx] || {};
+        const rows      = CONS_DATA[idx] || [];
+        const arr       = rows.reduce((s,r) => s + r.predCacv, 0);
+        const totalAcv  = rows.reduce((s,r) => s + r.acv, 0);
+        const mauAvg    = rows.length ? Math.round(rows.reduce((s,r) => s + r.finalMau, 0) / rows.length) : 0;
+        const consRate  = arr > 0 ? Math.round(totalAcv / arr * 100) : 0;
+        const lprMap    = LPR_DATA[idx] || {};
         let custPipeline = 0;
         rows.forEach(row => {
             const lpr = (lprMap[row.sub] || []).find(l => l.id === row.lprId);
@@ -1855,23 +1857,24 @@ function pgPortfolioOverview() {
         });
         const lprAll = Object.values(lprMap).flat();
         const atRisk = lprAll.some(l => l.implStatus === 'Red') || mauAvg < 50;
-        return { c, arr, mauAvg, custPipeline, atRisk };
+        return { c, arr, mauAvg, consRate, custPipeline, atRisk };
     });
 
-    const totalArr    = custData.reduce((s,d) => s + d.arr, 0);
-    const avgAdoption = custData.length ? Math.round(custData.reduce((s,d) => s + d.mauAvg, 0) / custData.length) : 0;
-    const atRiskCount = custData.filter(d => d.atRisk).length;
-    const atRiskNames = custData.filter(d => d.atRisk).map(d => d.c.name).join(', ') || '—';
+    const totalArr     = custData.reduce((s,d) => s + d.arr, 0);
+    const avgAdoption  = custData.length ? Math.round(custData.reduce((s,d) => s + d.mauAvg, 0) / custData.length) : 0;
+    const avgConsRate  = custData.length ? Math.round(custData.reduce((s,d) => s + d.consRate, 0) / custData.length) : 0;
+    const atRiskCount  = custData.filter(d => d.atRisk).length;
+    const atRiskNames  = custData.filter(d => d.atRisk).map(d => d.c.name).join(', ') || '—';
     const fmt = v => v >= 1000000 ? '€' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '€' + Math.round(v/1000) + 'K' : '€' + v;
 
-    const custRows = custData.map(({c, arr, mauAvg, custPipeline, atRisk}) => `
+    const custRows = custData.map(({c, arr, mauAvg, consRate, custPipeline, atRisk}) => `
     <div class="d-table-row" style="grid-template-columns:1.6fr .7fr .9fr 1.1fr 1.4fr 1.4fr .8fr">
         <div><div class="cust-name">${c.name}</div><div class="cust-meta">${c.industry}</div></div>
         <div>${c.region}</div>
         <div style="font-weight:600">${fmt(arr)}</div>
         <div style="font-weight:600;color:var(--primary)">${fmt(custPipeline)}</div>
         <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${mauAvg}%;${mauAvg<50?'background:#e87722':''}"></div></div><span class="prog-pct">${mauAvg}%</span></div>
-        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${mauAvg}%;background:${mauAvg>=70?'#4caf74':mauAvg>=50?'#e87722':'#c5221f'}"></div></div><span class="prog-pct">${mauAvg}%</span></div>
+        <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${consRate}%;background:${consRate>=70?'#4caf74':consRate>=50?'#e87722':'#c5221f'}"></div></div><span class="prog-pct">${consRate}%</span></div>
         <div><span class="tag ${atRisk?'tag-r':'tag-g'}">${atRisk?'At Risk':'Healthy'}</span></div>
     </div>`).join('');
 
@@ -1884,7 +1887,7 @@ function pgPortfolioOverview() {
         <div class="kpi-card"><div class="kpi-label">Avg Adoption Rate</div><div class="kpi-val">${avgAdoption}%</div><div class="kpi-trend">&#8593; +8pp vs Q2</div></div>
         <div class="kpi-card"><div class="kpi-label">At-Risk</div><div class="kpi-val" style="color:#e87722">${atRiskCount}</div><div class="kpi-trend warn">${atRiskNames}</div></div>
         <div class="kpi-card"><div class="kpi-label">Pre-Close Pipeline</div><div class="kpi-val" style="color:var(--primary)">${fmt(prePipeline)}</div><div class="kpi-trend">Total value of active pre-close LPRs</div></div>
-        <div class="kpi-card"><div class="kpi-label">Consumption Rate</div><div class="kpi-val" style="color:var(--primary)">${avgMau}%</div><div class="kpi-trend">Avg MAU across all LPRs &amp; quarters</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg Consumption Rate</div><div class="kpi-val" style="color:var(--primary)">${avgConsRate}%</div><div class="kpi-trend">Actual vs planned cACV across all LPRs</div></div>
     </div>
     <div class="s-card">
         <div class="s-title">Customer Portfolio</div>
