@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UACP – Unified Adoption and Consumption Platform</title>
+    <style>
+        :root {
+            --shell-bg: #354a5e;
+            --primary: #0064d9;
+            --primary-hover: #0053b3;
+            --content-bg: #f5f6f7;
+            --white: #ffffff;
+            --text-1: #32363a;
+            --text-2: #6a6d70;
+            --border: #e5e5e5;
+            --hover-bg: #eaf1fb;
+            --active-nav-bg: #ddeeff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: '72', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px; background: var(--content-bg);
+            color: var(--text-1); height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* ── Shell Bar ─────────────────────────────────── */
+        .shell-bar {
+            background: var(--shell-bg); height: 44px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; flex-shrink: 0; z-index: 200;
+        }
+        .shell-left { display: flex; align-items: center; gap: 10px; }
+        .menu-btn {
+            background: none; border: none; color: #fff;
+            font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 4px;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,.15); }
+        .app-name { font-size: 15px; font-weight: 700; color: #fff; }
+        .app-sub  { font-size: 11px; color: rgba(255,255,255,.65); margin-left: 8px; }
+        .shell-right { display: flex; align-items: center; gap: 8px; }
+
+        .btn-settings {
+            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
+            color: #fff; padding: 5px 13px; border-radius: 4px;
+            cursor: pointer; font-size: 13px;
+        }
+        .btn-settings:hover { background: rgba(255,255,255,.22); }
+
+        /* ── Theme variables ─────────────────────────────── */
+        body.dark-mode {
+            --shell-bg: #161b27;
+            --content-bg: #0f1117;
+            --white: #1c2133;
+            --text-1: #e4e6f0;
+            --text-2: #8892a4;
+            --border: #2c3248;
+            --hover-bg: #252b42;
+            --active-nav-bg: #1a2d50;
+        }
+        body.colorful-mode {
+            --shell-bg: #1f1050;
+            --primary: #00c9a7;
+            --primary-hover: #00a38a;
+            --content-bg: #f0f4ff;
+            --active-nav-bg: #d8f7f2;
+        }
+
+        /* Role dropdown button */
+        .role-btn {
+            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
+            color: #fff; padding: 5px 13px; border-radius: 4px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .role-btn:hover { background: rgba(255,255,255,.22); }
+
+        /* Stage tabs */
+        .stage-tabs { display: flex; gap: 3px; }
+        .stage-tab {
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+            color: rgba(255,255,255,.8); padding: 5px 14px; border-radius: 4px;
+            cursor: pointer; font-size: 13px; font-weight: 500;
+        }
+        .stage-tab:hover { background: rgba(255,255,255,.2); color: #fff; }
+        .stage-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+
+        /* User avatar + mgmt dropdown */
+        .avatar-wrap { position: relative; }
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #5a9fd4; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+        .avatar:hover { background: #4a8fc4; }
+        .mgmt-drop {
+            display: none; position: absolute; top: calc(100% + 5px); right: 0;
+            background: #fff; border: 1px solid var(--border);
+            border-radius: 6px; box-shadow: 0 4px 18px rgba(0,0,0,.14);
+            min-width: 180px; z-index: 500;
+        }
+        .mgmt-drop.open { display: block; }
+        .mgmt-opt {
+            padding: 9px 16px; cursor: pointer; font-size: 13px; color: var(--text-1);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .mgmt-opt:hover { background: var(--hover-bg); }
+        .mgmt-opt.active { color: var(--primary); font-weight: 600; }
+
+        /* ── Layout ─────────────────────────────────────── */
+        .layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* ── Side Nav ───────────────────────────────────── */
+        .side-nav {
+            width: 220px; background: var(--white);
+            border-right: 1px solid var(--border);
+            flex-shrink: 0; padding: 10px 0; overflow-y: auto;
+            transition: width .2s;
+        }
+        .side-nav.collapsed { width: 0; padding: 0; overflow: hidden; }
+        .nav-item {
+            padding: 9px 20px 9px 17px; cursor: pointer; font-size: 13px;
+            color: var(--text-1); display: flex; align-items: center; gap: 10px;
+            border-left: 3px solid transparent; transition: background .12s, color .12s;
+            white-space: nowrap;
+        }
+        .nav-item:hover { background: var(--hover-bg); color: var(--primary); }
+        .nav-item.active {
+            color: var(--primary); border-left-color: var(--primary);
+            background: var(--active-nav-bg); font-weight: 600;
+        }
+
+        /* ── Content ─────────────────────────────────────── */
+        .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+        .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .page-sub   { font-size: 13px; color: var(--text-2); margin-bottom: 18px; }
+
+        .btn-primary {
+            background: var(--primary); color: #fff; border: none;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            font-size: 13px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline {
+            background: #fff; color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 4px 12px; border-radius: 4px;
+            cursor: pointer; font-size: 12px; font-weight: 500;
+        }
+        .btn-outline:hover { background: var(--hover-bg); }
+        .btn-ghost {
+            background: none; border: 1px solid var(--border);
+            padding: 5px 13px; border-radius: 4px; cursor: pointer;
+            font-size: 13px; color: var(--text-2);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-ghost:hover { background: var(--hover-bg); }
+
+        /* ── Data Table ──────────────────────────────────── */
+        .d-table { background: var(--white); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+        .d-table-head {
+            display: grid; padding: 10px 20px;
+            background: #fafafa; border-bottom: 1px solid var(--border);
+            font-size: 12px; font-weight: 600; color: var(--text-2);
+            text-transform: uppercase; letter-spacing: .4px;
+        }
+        .d-table-row {
+            display: grid; padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            align-items: center; transition: background .1s;
+        }
+        .d-table-row:last-child { border-bottom: none; }
+        .d-table-row:hover { background: var(--hover-bg); }
+        .cust-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        .cust-meta { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+        .opp-id    { font-size: 13px; color: var(--text-2); }
+        .sol-link  { font-size: 13px; color: var(--primary); font-weight: 500; cursor: pointer; display: block; margin-bottom: 2px; }
+        .sol-link:hover { text-decoration: underline; }
+
+        /* ── Status tags ─────────────────────────────────── */
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .tag-g { background: #e5f5ec; color: #1a7a40; }
+        .tag-o { background: #fff3e0; color: #b35900; }
+        .tag-r { background: #fce9e7; color: #c5221f; }
+        .tag-b { background: #e6f0fe; color: #1a5eb8; }
+
+        /* ── Progress bar ────────────────────────────────── */
+        .prog-wrap { display: flex; align-items: center; gap: 8px; }
+        .prog-bar  { height: 7px; width: 100px; background: #e5e5e5; border-radius: 4px; overflow: hidden; }
+        .prog-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+        .prog-pct  { font-size: 11px; color: var(--text-2); }
+
+        /* ── KPI Cards ───────────────────────────────────── */
+        .kpi-grid { display: grid; gap: 16px; margin-bottom: 22px; }
+        .kpi-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; }
+        .kpi-label { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+        .kpi-val   { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .kpi-trend { font-size: 11px; color: #1a8d50; margin-top: 4px; }
+        .kpi-trend.warn { color: #b35900; }
+        .kpi-trend.bad  { color: #c5221f; }
+
+        /* ── Section Card ────────────────────────────────── */
+        .s-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 20px 24px; margin-bottom: 16px; }
+        .s-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+
+        /* ── Milestone rows ──────────────────────────────── */
+        .m-row { display: grid; padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; }
+        .m-row:last-child { border-bottom: none; }
+        .m-head { background: #fafafa; font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .4px; }
+
+        /* ── Report cards ────────────────────────────────── */
+        .rep-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 20px 22px; cursor: pointer; transition: border-color .15s; }
+        .rep-card:hover { border-color: var(--primary); }
+        .rep-icon  { font-size: 26px; margin-bottom: 8px; }
+        .rep-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+        .rep-desc  { font-size: 12px; color: var(--text-2); margin-bottom: 14px; }
+
+        /* ════════════════════════════════════════════════════
+           PRE-CLOSE PLAN FORM
+        ════════════════════════════════════════════════════ */
+        .pc-layout { display: flex; gap: 18px; align-items: flex-start; }
+        .pc-main   { flex: 1; min-width: 0; }
+
+        /* Combined block */
+        .pc-block { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 0; background: var(--white); }
+
+        .cust-bar { padding: 12px 24px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); }
+        .cust-bar-lbl { font-size: 13px; color: var(--text-2); flex-shrink: 0; }
+        .cust-bar-input {
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 5px 10px; font-size: 13px; font-family: inherit;
+            color: var(--text-1); width: 140px;
+        }
+        .cust-bar-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,100,217,.12); }
+        .cust-bar-opp { font-size: 13px; color: var(--text-2); }
+
+        /* Tabs */
+        .sol-tabs { display: flex; padding: 0 24px; background: var(--white); border-bottom: 1px solid var(--border); }
+        .sol-tab {
+            padding: 10px 4px; margin-right: 22px; cursor: pointer; font-size: 14px;
+            color: var(--text-2); border-bottom: 2px solid transparent;
+            font-weight: 500; white-space: nowrap; margin-bottom: -1px;
+        }
+        .sol-tab:hover { color: var(--primary); }
+        .sol-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+        /* Form */
+        .form-card { background: var(--white); padding: 22px 24px 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; }
+        .ff { display: flex; flex-direction: column; gap: 6px; }
+        .ff-lbl { font-size: 13px; color: var(--text-1); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+        .badge-ai {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 11px; font-weight: 600; color: #7b5ea7;
+            background: #f2edfa; padding: 1px 8px; border-radius: 8px;
+        }
+        .badge-human {
+            display: inline-flex; align-items: center;
+            font-size: 11px; font-weight: 600; color: #0064d9;
+            background: #e8f1fb; padding: 1px 8px; border-radius: 8px;
+        }
+
+        .ff select, .ff input[type="text"], .ff input[type="date"] {
+            border: 1px solid #c9cdd4; border-radius: 4px;
+            padding: 7px 10px; font-size: 13px; font-family: inherit;
+            color: var(--text-1); background: var(--white); width: 100%;
+            -webkit-appearance: none; appearance: none;
+        }
+        .ff select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a6d70'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+            padding-right: 28px; cursor: pointer;
+        }
+        .ff select:focus, .ff input:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0,100,217,.12);
+        }
+        .ff-date-wrap { position: relative; }
+        .ff-date-wrap input { padding-right: 32px; }
+        .ff-date-wrap .cal-ico {
+            position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+            color: var(--text-2); font-size: 13px; pointer-events: none;
+        }
+
+        /* AI units mini-table */
+        .ai-sub { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-top: 22px; }
+        .ai-sub-title { padding: 8px 14px; font-size: 13px; font-weight: 600; background: #fafafa; border-bottom: 1px solid var(--border); }
+        .ai-sub-row { display: grid; grid-template-columns: 1.3fr 1.5fr 2fr; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; }
+        .ai-sub-row:last-child { border-bottom: none; }
+        .ai-sub-row.hd { background: #fafafa; font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+        /* Form actions */
+        .form-actions {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; border-top: 1px solid var(--border); background: var(--white);
+        }
+        .form-actions-left { display: flex; gap: 10px; }
+
+        /* ════════════════════════════════════════════════════
+           JOULE WORK PANEL
+        ════════════════════════════════════════════════════ */
+        .joule-panel {
+            width: 272px; flex-shrink: 0; background: var(--white);
+            border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+            box-shadow: 0 2px 14px rgba(0,0,0,.10);
+            display: flex; flex-direction: column;
+            position: sticky; top: 0; align-self: flex-start;
+        }
+        .joule-panel.hidden { display: none; }
+        .joule-head {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 12px 10px; border-bottom: 1px solid var(--border);
+        }
+        .joule-ico {
+            width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+            background: #0064d9;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px; font-weight: 700;
+        }
+        .joule-name     { font-size: 13px; font-weight: 700; color: var(--text-1); }
+        .joule-lbl      { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+        .joule-close    { margin-left: auto; background: none; border: none; font-size: 17px; cursor: pointer; color: var(--text-2); padding: 0 4px; border-radius: 4px; line-height: 1; }
+        .joule-close:hover { background: var(--hover-bg); }
+        .joule-body     { padding: 13px; flex: 1; overflow-y: auto; max-height: 340px; display: flex; flex-direction: column; gap: 8px; }
+        .joule-msg      { background: #eef3fb; border-radius: 0 8px 8px 8px; padding: 11px 13px; font-size: 13px; line-height: 1.55; color: var(--text-1); }
+        .joule-user-msg { background: var(--primary); border-radius: 8px 0 8px 8px; padding: 9px 13px; font-size: 13px; line-height: 1.55; color: #fff; align-self: flex-end; max-width: 90%; }
+        .joule-footer   { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .joule-input    { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 6px 13px; font-size: 13px; font-family: inherit; color: var(--text-1); outline: none; background: var(--white); }
+        .joule-input::placeholder { color: var(--text-2); }
+        .joule-input:focus { border-color: var(--primary); }
+        .joule-send     { width: 30px; height: 30px; border-radius: 50%; background: var(--primary); border: none; color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .joule-send:hover { background: var(--primary-hover); }
+        .single-sec { border:1px solid var(--border); border-radius:8px; margin-bottom:14px; overflow:hidden; }
+        .single-sec-head { background:#e8f1fb; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:600; color:var(--primary); font-size:14px; user-select:none; }
+        body.dark-mode .single-sec-head { background:#1a2d50; }
+        body.colorful-mode .single-sec-head { background:#d8f7f2; }
+        .single-sec-body { background:var(--white); padding:20px 24px 8px; }
+        .single-sec-body.collapsed { display:none; }
+        .lpr-ph-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); cursor:pointer; }
+        .lpr-ph-row:hover { background:var(--hover-bg); margin:0 -24px; padding-left:24px; padding-right:24px; }
+        .lpr-ph-name { font-size:13px; font-weight:600; color:var(--text-1); flex:1; }
+        .lpr-ph-note { font-size:11px; color:var(--text-2); font-style:italic; }
+        .cust-bar-sub-sel { border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:13px; font-family:inherit; color:var(--text-1); background:var(--white); cursor:pointer; min-width:180px; }
+
+        /* ════════════════════════════════════════════════════
+           POST-SALES OVERVIEW PAGE
+        ════════════════════════════════════════════════════ */
+        .ps-layout { display: flex; gap: 18px; align-items: flex-start; }
+        .ps-main   { flex: 1; min-width: 0; }
+
+        .welcome-banner {
+            background: linear-gradient(90deg, #e8f2fd 0%, #f0f6ff 100%);
+            border: 1px solid #bdd6f5; border-radius: 6px;
+            padding: 11px 18px; margin-bottom: 18px;
+            font-size: 13px; color: var(--text-1);
+        }
+        .welcome-banner strong { color: var(--primary); }
+        .welcome-banner .wb-sub { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+
+        .ps-section { background: var(--white); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 18px; }
+        .ps-sec-head { padding: 11px 20px; border-bottom: 1px solid var(--border); }
+        .ps-sec-title { font-size: 14px; font-weight: 700; }
+        .ps-sec-sub   { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+        .attn-head { background: #fdf5ea; }
+        .attn-title { font-size: 14px; font-weight: 700; color: var(--text-1); }
+
+        /* LPR filter row */
+        .lpr-filter {
+            display: flex; align-items: center; gap: 14px;
+            padding: 9px 20px; border-bottom: 1px solid var(--border);
+            background: var(--white);
+        }
+        .lpr-filter-lbl { font-size: 13px; color: var(--text-2); }
+        .lpr-filter select {
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 4px 26px 4px 10px; font-size: 13px; font-family: inherit;
+            color: var(--text-1); -webkit-appearance: none; appearance: none;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236a6d70'/%3E%3C/svg%3E") no-repeat right 7px center;
+            cursor: pointer;
+        }
+        .lpr-filter select:focus { outline: none; border-color: var(--primary); }
+
+        /* LPR state dot */
+        .lpr-state { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-o  { background: #0064d9; }
+        .dot-g  { background: #1a8d50; }
+        .dot-k  { background: #5a5a5a; }
+        .dot-b  { background: var(--primary); }
+
+        /* Attention action types */
+        .at-signoff { color: #0064d9; font-weight: 600; font-size: 13px; }
+        .at-red     { color: #c5221f; font-weight: 600; font-size: 13px; }
+
+        /* ── LPR Cards (Post-Close Plan) ─────────────────── */
+        .lpr-card { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 16px; }
+        .lpr-card-head {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 16px; background: #fafafa;
+            border-bottom: 1px solid var(--border); cursor: pointer;
+        }
+        .lpr-card-head:hover { background: var(--hover-bg); }
+        .lpr-card-id { font-size: 13px; font-weight: 600; color: var(--text-1); }
+        .lpr-chevron { color: var(--text-2); font-size: 11px; margin-left: auto; }
+        .set-live-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; cursor: pointer; margin-left: auto; color: var(--text-1);
+        }
+        .set-live-label input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; }
+        .lpr-card-body { padding: 20px 22px; }
+        .lpr-card-body.collapsed { display: none; }
+
+        /* Implementation Status colour options */
+        .status-green-opt { color: #1a8d50; }
+        .status-red-opt   { color: #c5221f; }
+        .status-yellow-opt{ color: #b35900; }
+
+        /* ── Footer ──────────────────────────────────────── */
+        .footer { background: var(--white); border-top: 1px solid var(--border); padding: 7px 28px; font-size: 11px; color: var(--text-2); flex-shrink: 0; }
+
+        /* ── Simple Table (Review page) ──────────────────── */
+        .simple-tbl { border-collapse: collapse; width: 100%; }
+        .simple-tbl th { padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-2); text-align: left; border-bottom: 2px solid var(--border); }
+        .simple-tbl td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .simple-tbl tr:last-child td { border-bottom: none; }
+        .simple-tbl tr:hover td { background: var(--hover-bg); }
+
+        /* ── Handover Table ──────────────────────────────── */
+        .ho-tbl { border-collapse: collapse; width: 100%; min-width: 780px; }
+        .ho-tbl th { padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--text-2); text-align: left; border-bottom: 1px solid var(--border); background: #fafafa; white-space: nowrap; }
+        .ho-tbl td { padding: 8px 10px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .ho-tbl tr:last-child td { border-bottom: none; }
+        .ho-tbl tr:hover td { background: var(--hover-bg); }
+        .ho-tbl td:nth-child(1) { width: 52px; }
+        .ho-tbl td:nth-child(2), .ho-tbl th:nth-child(2) { width: 11%; }
+        .ho-tbl td:nth-child(3), .ho-tbl th:nth-child(3) { width: 9%; }
+        .ho-tbl td:nth-child(4), .ho-tbl th:nth-child(4) { width: 13%; }
+        .ho-tbl td:nth-child(5), .ho-tbl th:nth-child(5) { width: 26%; }
+        .ho-tbl td:nth-child(6), .ho-tbl th:nth-child(6) { width: 9%; }
+        .ho-tbl td:nth-child(7), .ho-tbl th:nth-child(7) { width: 12%; }
+        .ho-tbl td:nth-child(8), .ho-tbl th:nth-child(8) { width: 10%; }
+
+        /* ── Management layout ───────────────────────────── */
+        .mgmt-layout { display: flex; gap: 16px; align-items: flex-start; }
+        .mgmt-left   { flex: 1; min-width: 0; }
+
+        /* ── Handover Modal ──────────────────────────────── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); z-index: 900;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff; border-radius: 8px;
+            width: 560px; max-width: 94vw; max-height: 88vh;
+            overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,.22);
+            display: flex; flex-direction: column;
+        }
+        .modal-header { padding: 24px 28px 0; }
+        .modal-breadcrumb { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: .6px; text-transform: uppercase; margin-bottom: 6px; }
+        .modal-cust-name  { font-size: 28px; font-weight: 800; color: var(--text-1); margin-bottom: 4px; }
+        .modal-meta       { font-size: 13px; color: var(--text-2); margin-bottom: 18px; }
+        .modal-divider    { border: none; border-top: 1px solid var(--border); margin: 0 28px; }
+        .modal-body       { padding: 18px 28px 4px; flex: 1; }
+        .modal-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            padding: 11px 0; border-bottom: 1px solid #f0f0f0;
+            font-size: 13px; align-items: baseline;
+        }
+        .modal-row:last-child { border-bottom: none; }
+        .modal-row-head {
+            display: grid; grid-template-columns: 1fr 1fr;
+            padding: 9px 0 7px; border-bottom: 1px solid var(--border);
+            background: #f5f6f7; margin: 0 -28px; padding-left: 28px; padding-right: 28px;
+        }
+        .modal-row-head span:last-child { text-align: right; font-weight: 700; font-size: 14px; }
+        .modal-lbl { color: var(--text-2); }
+        .modal-val { text-align: right; font-weight: 500; color: var(--text-1); }
+        .modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 16px 28px; border-top: 1px solid var(--border);
+            background: #fafafa; border-radius: 0 0 8px 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Shell Bar -->
+<header class="shell-bar">
+    <div class="shell-left">
+        <button class="menu-btn" onclick="toggleNav()">&#9776;</button>
+        <div>
+            <span class="app-name">UACP</span>
+            <span class="app-sub">Unified Adoption and Consumption Platform</span>
+        </div>
+    </div>
+    <div class="shell-right">
+        <div class="avatar-wrap">
+            <button class="btn-settings" onclick="toggleSettingsDrop()">&#9881; Settings</button>
+            <div class="mgmt-drop" id="settingsDrop" style="right:auto;left:0;min-width:220px">
+                <div style="padding:7px 16px 3px;font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.6px">Theme</div>
+                <div class="mgmt-opt" id="theme-light"    onclick="setTheme('light')">&#9728; Light Mode</div>
+                <div class="mgmt-opt" id="theme-dark"     onclick="setTheme('dark')">&#9790; Dark Mode</div>
+                <div class="mgmt-opt" id="theme-colorful" onclick="setTheme('colorful')">&#10024; Colorful Mode</div>
+                <div style="border-top:1px solid var(--border);padding:7px 16px 3px;font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.6px">Adoption Plan View</div>
+                <div style="padding:8px 16px;display:flex;gap:6px">
+                    <button id="apv-separate" onclick="setAdoptionPlanView('separate')" style="flex:1;padding:6px 4px;border:1px solid var(--primary);border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;font-weight:600;line-height:1.3;text-align:center">Pre-/Post Adoption Plan</button>
+                    <button id="apv-single"   onclick="setAdoptionPlanView('single')"   style="flex:1;padding:6px 4px;border:1px solid var(--border);border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;background:#fff;color:var(--text-2);line-height:1.3;text-align:center">Single Adoption Plan</button>
+                </div>
+                <div id="apv-desc" style="padding:0 16px 10px;font-size:11px;color:var(--text-2);line-height:1.4">Current view: separate pre-close and post-close plans (default)</div>
+            </div>
+        </div>
+        <div class="avatar-wrap">
+            <button class="role-btn" id="roleBtn" onclick="toggleMgmtDrop()">
+                <span id="roleLabel">Sales Role</span>
+                <span style="font-size:10px;margin-left:4px">&#9660;</span>
+            </button>
+            <div class="mgmt-drop" id="mgmtDrop">
+                <div class="mgmt-opt" id="opt-sales"        onclick="setRole('sales')">&#128200; Sales Role</div>
+                <div class="mgmt-opt" id="opt-postsales"    onclick="setRole('postsales')">&#128203; Post Sales Role</div>
+                <div class="mgmt-opt" id="opt-management"   onclick="setRole('management')" style="border-top:1px solid var(--border)">&#128196; Management Role</div>
+                <div class="mgmt-opt" style="color:var(--text-2);border-top:1px solid var(--border);cursor:default;font-size:12px;padding:8px 16px">&#128100; René Wirthmann</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main -->
+<div class="layout">
+    <nav class="side-nav" id="sideNav"></nav>
+    <main class="content" id="content"></main>
+</div>
+
+<div class="footer">UACP prototype in status DRAFT &nbsp;·&nbsp; Version created by René Wirthmann &amp; Rodolfo Schneider</div>
+
+<!-- Handover Modal -->
+<div class="modal-overlay" id="handoverModal" onclick="closeHandoverModal(event)">
+    <div class="modal-box" id="handoverModalBox"></div>
+</div>
+
+<div class="modal-overlay" id="mcpModal" onclick="if(event.target===this)closeMcpModal()">
+    <div class="modal-box" style="width:520px;padding:0;border-radius:10px;overflow:hidden">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:24px 24px 20px">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="color:#fff;font-size:18px">&#128100;&#43;</span>
+            </div>
+            <div style="flex:1">
+                <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:4px">Add real data via MCP (Demo)</div>
+                <div style="font-size:13px;color:var(--text-2);line-height:1.5">Search for a customer in MXP via MCP. Select a result to add them to your overview.</div>
+            </div>
+            <button onclick="closeMcpModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-2);line-height:1;padding:0 2px">&times;</button>
+        </div>
+        <div style="padding:0 24px 20px;display:flex;gap:8px">
+            <input id="mcpSearchInput" type="text" placeholder="Enter customer name…"
+                style="flex:1;border:2px solid var(--primary);border-radius:4px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--text-1);outline:none"
+                onkeydown="if(event.key==='Enter')runMcpSearch()">
+            <button class="btn-primary" onclick="runMcpSearch()" style="padding:8px 18px">Search</button>
+        </div>
+        <div id="mcpResults" style="padding:0 24px 4px;min-height:32px;font-size:13px;color:var(--text-2)"></div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border);margin-top:8px">
+            <button onclick="closeMcpModal()" style="padding:8px 22px;border:1px solid var(--border);border-radius:4px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit">Cancel</button>
+            <button class="btn-primary" onclick="addMcpCustomer()" style="padding:8px 22px">Add selected customer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ─── DATA ──────────────────────────────────────────────── */
+const CUSTOMERS = [
+    { name:'Volkswagen',   industry:'Automotive',     region:'EMEA', opp:'0300110001', solutions:['Cloud ERP Private'] },
+    { name:'Space X',      industry:'Aerospace',      region:'AMER', opp:'0300120001', solutions:['Core HR and Payroll public','Business Network'] },
+    { name:'Amazon',       industry:'Retail / Cloud', region:'AMER', opp:'0300130001', solutions:['Cloud ERP Private'] },
+];
+
+const PLAN_DATA = {
+    0: {
+        'Cloud ERP Private': {
+            valueDriver:'Improve customer satisfaction', implementedBy:'Partner implementation',
+            sysPartner:'Accenture', partnerContact:'Maria Schmidt',
+            kickOff:'02/10/2027', projGoLive:'08/15/2027',
+            goLiveStrategy:'Regional go-lives planned', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'Cloud ERP Private', unit:'Joule for Finance',        driver:'Reduce compliance and risk management cost' },
+                { sub:'Cloud ERP Private', unit:'Predictive Accounting AI', driver:'Improve user experience and interface solutions' },
+            ]
+        }
+    },
+    1: {
+        'Core HR and Payroll public': {
+            valueDriver:'Increase employee engagement', implementedBy:'SAP implementation',
+            sysPartner:'Deloitte', partnerContact:'James O\'Brien',
+            kickOff:'03/15/2027', projGoLive:'10/01/2027',
+            goLiveStrategy:'Big bang go-live', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'Core HR and Payroll public', unit:'Joule for HR',                 driver:'Improve user experience and interface solutions' },
+                { sub:'Core HR and Payroll public', unit:'Payroll Compliance Assistant', driver:'Reduce compliance and risk management cost' },
+            ]
+        },
+        'Business Network': {
+            valueDriver:'Improve customer satisfaction', implementedBy:'SAP implementation',
+            sysPartner:'BearingPoint', partnerContact:'Lena Fischer',
+            kickOff:'05/01/2027', projGoLive:'12/01/2027',
+            goLiveStrategy:'Big bang go-live', aiUseCases:'No',
+            aiUnits:[
+                { sub:'Business Network', unit:'AI Supplier Discovery',    driver:'Reduce total cost of ownership' },
+                { sub:'Business Network', unit:'Intelligent Invoice Match', driver:'Increase operational efficiency' },
+            ]
+        }
+    },
+    2: {
+        'Cloud ERP Private': {
+            valueDriver:'Increase operational efficiency', implementedBy:'Partner implementation',
+            sysPartner:'IBM', partnerContact:'Alex Johnson',
+            kickOff:'01/20/2027', projGoLive:'07/01/2027',
+            goLiveStrategy:'Parallel run', aiUseCases:'Yes',
+            aiUnits:[
+                { sub:'Cloud ERP Private', unit:'Joule for Finance',      driver:'Reduce compliance and risk management cost' },
+                { sub:'Cloud ERP Private', unit:'AI Cash Flow Predictor', driver:'Improve customer satisfaction' },
+            ]
+        }
+    }
+};
+
+const LPR_DATA = {
+    0: { 'Cloud ERP Private': [
+        { id:'LPR-10001', name:'S/4HANA Cloud Private Edition',
+          goLiveStrategy:'Regional go-lives planned', onboardingType:'Full onboarding',
+          onboardingStatus:'In progress', implParty:'Partner', implPartner:'Accenture',
+          kickoff:'02/15/2027', plannedGoLive:'08/20/2027', confirmedGoLive:'',
+          implStatus:'Green', statusReason:'All milestones on track, no open risks.', validatedHandover:'No' }
+    ]},
+    1: {
+        'Core HR and Payroll public': [
+            { id:'LPR-31001', name:'SAP SuccessFactors HCM Suite',
+              goLiveStrategy:'Big bang go-live', onboardingType:'Full onboarding',
+              onboardingStatus:'At risk', implParty:'Partner', implPartner:'Deloitte',
+              kickoff:'03/01/2027', plannedGoLive:'10/01/2027', confirmedGoLive:'',
+              implStatus:'Red', statusReason:'Integration blockers pending resolution.', validatedHandover:'No' },
+            { id:'LPR-31002', name:'SAP Payroll',
+              goLiveStrategy:'Big bang go-live', onboardingType:'Guided onboarding',
+              onboardingStatus:'In progress', implParty:'Partner', implPartner:'Deloitte',
+              kickoff:'03/01/2027', plannedGoLive:'10/01/2027', confirmedGoLive:'',
+              implStatus:'Yellow', statusReason:'Minor data migration delays.', validatedHandover:'No' }
+        ],
+        'Business Network': [
+            { id:'LPR-32001', name:'SAP Business Network',
+              goLiveStrategy:'Phased rollout', onboardingType:'Self onboarding',
+              onboardingStatus:'In progress', implParty:'SAP', implPartner:'IBM',
+              kickoff:'04/15/2027', plannedGoLive:'11/15/2027', confirmedGoLive:'',
+              implStatus:'Green', statusReason:'On track, all milestones met.', validatedHandover:'No' }
+        ]
+    },
+    2: { 'Cloud ERP Private': [
+        { id:'LPR-11001', name:'S/4HANA Cloud Private Edition',
+          goLiveStrategy:'Parallel run', onboardingType:'Full onboarding',
+          onboardingStatus:'Completed', implParty:'Partner', implPartner:'IBM',
+          kickoff:'01/20/2027', plannedGoLive:'07/01/2027', confirmedGoLive:'07/01/2027',
+          implStatus:'Green', statusReason:'Go-live completed successfully.', validatedHandover:'Yes' },
+        { id:'LPR-11002', name:'SAP BTP Extension Suite',
+          goLiveStrategy:'Parallel run', onboardingType:'Guided onboarding',
+          onboardingStatus:'In progress', implParty:'Partner', implPartner:'IBM',
+          kickoff:'02/01/2027', plannedGoLive:'08/01/2027', confirmedGoLive:'',
+          implStatus:'Green', statusReason:'Minor customizations pending.', validatedHandover:'No' }
+    ]}
+};
+
+
+const CONS_DATA = {
+    0:[
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q3 2027',acv:74500,predCacv:74500,finalMau:7,plannedCacv:74500},
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q4 2027',acv:75500,predCacv:75500,finalMau:10,plannedCacv:75500},
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q1 2028',acv:79000,predCacv:79000,finalMau:6,plannedCacv:79000},
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q2 2028',acv:43000,predCacv:43000,finalMau:3,plannedCacv:43000},
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q3 2028',acv:96000,predCacv:96000,finalMau:4,plannedCacv:96000},
+        {sub:'Cloud ERP Private',lprId:'LPR-10001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q4 2028',acv:81500,predCacv:81500,finalMau:9,plannedCacv:81500},
+    ],
+    1:[
+        {sub:'Core HR and Payroll public',lprId:'LPR-31001',lprName:'SAP SuccessFactors HCM Suite',quarter:'Q4 2027',acv:42000,predCacv:42000,finalMau:5,plannedCacv:42000},
+        {sub:'Core HR and Payroll public',lprId:'LPR-31001',lprName:'SAP SuccessFactors HCM Suite',quarter:'Q1 2028',acv:45000,predCacv:45000,finalMau:7,plannedCacv:45000},
+        {sub:'Business Network',lprId:'LPR-32001',lprName:'SAP Business Network',quarter:'Q4 2027',acv:18000,predCacv:18000,finalMau:8,plannedCacv:18000},
+    ],
+    2:[
+        {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q2 2027',acv:122000,predCacv:122000,finalMau:8,plannedCacv:122000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11001',lprName:'S/4HANA Cloud Private Edition',quarter:'Q3 2027',acv:118000,predCacv:118000,finalMau:6,plannedCacv:118000},
+        {sub:'Cloud ERP Private',lprId:'LPR-11002',lprName:'SAP BTP Extension Suite',quarter:'Q3 2027',acv:45000,predCacv:45000,finalMau:4,plannedCacv:45000},
+    ],
+};
+
+/* Management dashboard data */
+const KPI_BY_REGION = {
+    'All Regions':{total:230,preConf:9,preComp:43,postComp:4,bothComp:2,
+        preDB:[{k:'VALUE DRIVERS',n:61,d:87,red:false},{k:'IMPLEMENTATION',n:86,d:87,red:false},{k:'PROJ. GO-LIVE',n:60,d:87,red:false},{k:'CONTACT IT',n:86,d:87,red:false},{k:'BUS. CONTACT PLAN',n:61,d:87,red:false},{k:'CONFIRMED PLAN',n:9,d:87,red:true}],
+        postDB:[{k:'CACV PLAN',n:24,d:230,red:true},{k:'CUSTOMER GOALS',n:16,d:230,red:false},{k:'SUCCESS PLANS',n:10,d:230,red:true},{k:'PLANNED GO-LIVE',n:194,d:230,red:false}]},
+    'APAC':{total:58,preConf:3,preComp:11,postComp:1,bothComp:1,
+        preDB:[{k:'VALUE DRIVERS',n:16,d:23,red:false},{k:'IMPLEMENTATION',n:22,d:23,red:false},{k:'PROJ. GO-LIVE',n:15,d:23,red:false},{k:'CONTACT IT',n:22,d:23,red:false},{k:'BUS. CONTACT PLAN',n:15,d:23,red:false},{k:'CONFIRMED PLAN',n:2,d:23,red:true}],
+        postDB:[{k:'CACV PLAN',n:5,d:58,red:true},{k:'CUSTOMER GOALS',n:4,d:58,red:false},{k:'SUCCESS PLANS',n:2,d:58,red:true},{k:'PLANNED GO-LIVE',n:47,d:58,red:false}]},
+    'Americas':{total:62,preConf:3,preComp:12,postComp:1,bothComp:0,
+        preDB:[{k:'VALUE DRIVERS',n:17,d:24,red:false},{k:'IMPLEMENTATION',n:24,d:24,red:false},{k:'PROJ. GO-LIVE',n:16,d:24,red:false},{k:'CONTACT IT',n:24,d:24,red:false},{k:'BUS. CONTACT PLAN',n:17,d:24,red:false},{k:'CONFIRMED PLAN',n:3,d:24,red:true}],
+        postDB:[{k:'CACV PLAN',n:5,d:62,red:true},{k:'CUSTOMER GOALS',n:4,d:62,red:false},{k:'SUCCESS PLANS',n:2,d:62,red:true},{k:'PLANNED GO-LIVE',n:54,d:62,red:false}]},
+    'EMEA':{total:74,preConf:2,preComp:14,postComp:2,bothComp:1,
+        preDB:[{k:'VALUE DRIVERS',n:19,d:27,red:false},{k:'IMPLEMENTATION',n:27,d:27,red:false},{k:'PROJ. GO-LIVE',n:20,d:27,red:false},{k:'CONTACT IT',n:27,d:27,red:false},{k:'BUS. CONTACT PLAN',n:18,d:27,red:false},{k:'CONFIRMED PLAN',n:2,d:27,red:true}],
+        postDB:[{k:'CACV PLAN',n:8,d:74,red:true},{k:'CUSTOMER GOALS',n:6,d:74,red:false},{k:'SUCCESS PLANS',n:4,d:74,red:true},{k:'PLANNED GO-LIVE',n:62,d:74,red:false}]},
+    'MEE':{total:36,preConf:1,preComp:6,postComp:0,bothComp:0,
+        preDB:[{k:'VALUE DRIVERS',n:10,d:13,red:false},{k:'IMPLEMENTATION',n:11,d:13,red:false},{k:'PROJ. GO-LIVE',n:9,d:13,red:false},{k:'CONTACT IT',n:11,d:13,red:false},{k:'BUS. CONTACT PLAN',n:10,d:13,red:false},{k:'CONFIRMED PLAN',n:2,d:13,red:true}],
+        postDB:[{k:'CACV PLAN',n:4,d:36,red:true},{k:'CUSTOMER GOALS',n:2,d:36,red:false},{k:'SUCCESS PLANS',n:1,d:36,red:true},{k:'PLANNED GO-LIVE',n:30,d:36,red:false}]},
+};
+const CHART_DATA = {
+    preConf:{
+        byRegion:[{l:'APAC',v:9.5,k:'APAC'},{l:'Americas',v:7.5,k:'Americas'},{l:'EMEA',v:10.5,k:'EMEA'},{l:'MEE',v:9.5,k:'MEE'}],
+        bySol:[{l:'Cloud ERP',v:12.3,k:'Cloud ERP'},{l:'Bus. Net.',v:8.1,k:'Business Network'},{l:'HR & Pay.',v:9.8,k:'HR & Payroll'},{l:'Signavio',v:4.2,k:'Signavio'}],
+        bySub:[{l:'Private',v:11.2,k:'Private'},{l:'Public',v:8.4,k:'Public'},{l:'Hybrid',v:6.1,k:'Hybrid'}],
+    },
+    postComp:{
+        byRegion:[{l:'APAC',v:5.8,k:'APAC'},{l:'Americas',v:5.8,k:'Americas'},{l:'EMEA',v:5.8,k:'EMEA'},{l:'MEE',v:0.8,k:'MEE'}],
+        bySol:[{l:'Cloud ERP',v:7.2,k:'Cloud ERP'},{l:'Bus. Net.',v:4.1,k:'Business Network'},{l:'HR & Pay.',v:5.9,k:'HR & Payroll'},{l:'Signavio',v:2.3,k:'Signavio'}],
+        bySub:[{l:'Private',v:6.8,k:'Private'},{l:'Public',v:4.2,k:'Public'},{l:'Hybrid',v:3.1,k:'Hybrid'}],
+    },
+    valDrv:{
+        byRegion:[{l:'APAC',v:61,k:'APAC'},{l:'Americas',v:65,k:'Americas'},{l:'EMEA',v:76,k:'EMEA'},{l:'MEE',v:81,k:'MEE'}],
+        bySol:[{l:'Cloud ERP',v:74,k:'Cloud ERP'},{l:'Bus. Net.',v:68,k:'Business Network'},{l:'HR & Pay.',v:71,k:'HR & Payroll'},{l:'Signavio',v:58,k:'Signavio'}],
+        bySub:[{l:'Private',v:73,k:'Private'},{l:'Public',v:66,k:'Public'},{l:'Hybrid',v:54,k:'Hybrid'}],
+    },
+    cacv:{
+        byRegion:[{l:'APAC',v:11,k:'APAC'},{l:'Americas',v:7,k:'Americas'},{l:'EMEA',v:14,k:'EMEA'},{l:'MEE',v:14,k:'MEE'}],
+        bySol:[{l:'Cloud ERP',v:13,k:'Cloud ERP'},{l:'Bus. Net.',v:9,k:'Business Network'},{l:'HR & Pay.',v:11,k:'HR & Payroll'},{l:'Signavio',v:6,k:'Signavio'}],
+        bySub:[{l:'Private',v:14,k:'Private'},{l:'Public',v:9,k:'Public'},{l:'Hybrid',v:7,k:'Hybrid'}],
+    },
+};
+
+const ROLE_NAV = {
+    sales: [
+        { id:'customer-overview', label:'My Customer Overview',    icon:'&#128100;' },
+        { id:'preclose-plan',     label:'Pre-Close Adoption Plan', icon:'&#8599;&#65038;' },
+    ],
+    postsales: [
+        { id:'ps-overview',      label:'My Customer Overview',       icon:'&#128100;' },
+        { id:'preclose-plan',    label:'Pre-Close Adoption Plan',    icon:'&#8599;&#65038;' },
+        { id:'postclose-plan',   label:'Post-Close Adoption Plan',   icon:'&#128203;' },
+        { id:'consumption-plan', label:'Consumption Plan',           icon:'&#128202;' },
+    ],
+    consumption: [
+        { id:'cons-overview',  label:'My Customer Overview', icon:'&#128100;' },
+        { id:'cons-plans',     label:'Consumption Plans',    icon:'&#128202;' },
+        { id:'cons-analytics', label:'Analytics',            icon:'&#128200;' },
+    ],
+    management: [
+        { id:'mgmt-dashboard',     label:'Management Dashboard', icon:'&#128202;' },
+        { id:'portfolio-overview', label:'Portfolio Overview',   icon:'&#128196;' },
+        { id:'team-performance',   label:'Team Performance',     icon:'&#128200;' },
+        { id:'reports',            label:'Reports &amp; Analytics',  icon:'&#128203;' },
+    ],
+};
+const ROLE_DEFAULT = { sales:'customer-overview', postsales:'ps-overview', consumption:'cons-overview', management:'mgmt-dashboard' };
+const STAGE_ROLES  = ['sales','postsales','consumption'];
+
+let role    = 'sales';
+let page    = 'customer-overview';
+let selCust = null;
+let selTab  = null;
+let navOpen = true;
+let mgmtRegion  = 'All Regions';
+let mgmtSolution= 'All Solution Areas';
+let mgmtSubSol  = 'All Sub-Solution Areas';
+let mgmtChartDims = {preConf:'byRegion',postComp:'byRegion',valDrv:'byRegion',cacv:'byRegion'};
+
+/* ─── SHELL ──────────────────────────────────────────────── */
+function toggleNav() {
+    navOpen = !navOpen;
+    document.getElementById('sideNav').classList.toggle('collapsed', !navOpen);
+}
+
+let currentTheme = 'light';
+let adoptionPlanView = 'separate';
+let singleSubFilter  = 'All Sub-Solutions';
+let consSub = 'All Sub-Solutions';
+let consLpr = 'All LPRs';
+let consQtr = 'All Quarters';
+let jouleMessages    = [];
+
+function toggleSettingsDrop() {
+    document.getElementById('settingsDrop').classList.toggle('open');
+}
+
+function jouleAsk() {
+    const input = document.getElementById('jouleInput');
+    const body  = document.getElementById('jouleBody');
+    const q = (input ? input.value : '').trim();
+    if (!q) return;
+    jouleMessages.push({ role:'user', text: q });
+    if (body) {
+        body.innerHTML += `<div class="joule-user-msg">${q}</div>`;
+        body.scrollTop = body.scrollHeight;
+    }
+    if (input) input.value = '';
+    setTimeout(() => {
+        const answer = getJouleAnswer(q);
+        jouleMessages.push({ role:'ai', text: answer });
+        if (body) {
+            body.innerHTML += `<div class="joule-msg">${answer}</div>`;
+            body.scrollTop = body.scrollHeight;
+        }
+    }, 650);
+}
+
+function getJouleAnswer(q) {
+    const lower = q.toLowerCase();
+    const c = selCust !== null ? CUSTOMERS[selCust] : null;
+    const tab = selTab || (c ? c.solutions[0] : null);
+    const d = (c && tab && PLAN_DATA[selCust] && PLAN_DATA[selCust][tab]) ? PLAN_DATA[selCust][tab] : null;
+    const cname = c ? `<strong>${c.name}</strong>` : 'this customer';
+
+    if (/hello|hi\b|hey/.test(lower))
+        return `Hi! I'm Alden, your UACP Joule Work assistant. I can help with adoption plans, value drivers, go-live dates, AI use-cases, and consumption data. What would you like to know?`;
+    if (/what can you|help/.test(lower))
+        return `I can help you with:<br>&bull; Value drivers &amp; AI use-cases<br>&bull; Go-live date &amp; kick-off planning<br>&bull; Implementation partner details<br>&bull; LPR status &amp; consumption data<br>&bull; Handover to Post Sales process`;
+    if (/value driver|driver/.test(lower))
+        return d ? `The value driver for ${cname} &ndash; ${tab} is: <strong>${d.valueDriver}</strong>. Pre-calculated from opportunity data in the CRM.`
+                 : `Value drivers represent the business outcomes the customer wants to achieve. They are pre-filled from the CRM opportunity data and can be adjusted.`;
+    if (/go.?live|golive/.test(lower))
+        return d ? `Projected business go-live for ${cname} is <strong>${d.projGoLive}</strong> &mdash; calculated from kick-off date and implementation complexity.`
+                 : `The go-live date is calculated using kick-off date, implementation scope, and partner capacity.`;
+    if (/kick.?off|start date/.test(lower))
+        return d ? `Kick-off date for ${cname} is <strong>${d.kickOff}</strong>. Ensure the partner and customer stakeholders are aligned.`
+                 : `The kick-off date marks the official start of implementation. Confirm with the partner and customer early.`;
+    if (/partner|implementat/.test(lower))
+        return d ? `For ${cname}: partner is <strong>${d.sysPartner}</strong> (${d.implementedBy}), contact: <strong>${d.partnerContact}</strong>.`
+                 : `The system implementation partner leads technical delivery. Confirm them during the pre-close phase.`;
+    if (/ai use.?case|joule|use case/.test(lower))
+        return d ? `AI use-cases for ${cname}: <strong>${d.aiUseCases}</strong>.${d.aiUnits?.length ? ` Units included: ${d.aiUnits.map(u=>`<em>${u.unit}</em>`).join(', ')}.` : ''}`
+                 : `AI use-cases like Joule are pre-filled from solution scope. They drive additional value and should be reviewed with the customer.`;
+    if (/lpr|live point|readiness/.test(lower))
+        return `LPRs (Live Points of Reference) track go-live readiness per product module. They are filled by the Post Sales team after handover and updated through implementation.`;
+    if (/consumption|cacv|revenue|cACV/.test(lower)) {
+        if (c && CONS_DATA[selCust] && CONS_DATA[selCust].length) {
+            const total = CONS_DATA[selCust].reduce((s,r)=>s+r.predCacv,0);
+            return `Predicted total cACV for ${cname}: <strong>$${total.toLocaleString()}</strong> across ${CONS_DATA[selCust].length} periods.`;
+        }
+        return `The Consumption Plan tracks predicted vs actual cACV by LPR and quarter, helping identify adoption gaps early.`;
+    }
+    if (/handover|post.?sales/.test(lower))
+        return `The Handover to Post Sales sends a summary with all pre-filled plan details. The Post Sales team reviews, may request changes, and signs off before implementation starts.`;
+    if (/strategy|go.?live strat/.test(lower))
+        return d ? `Go-live strategy for ${cname}: <strong>${d.goLiveStrategy}</strong>. This determines how the system transitions from old to new.`
+                 : `Go-live strategies include Big bang, Phased rollout, Parallel run, and Regional go-lives. The choice depends on risk tolerance and complexity.`;
+    if (/status|risk|red|green/.test(lower))
+        return `Implementation status is tracked per LPR: Green (on track), Yellow (minor delays), Red (at risk). Review the Post-Close Adoption Plan for current status.`;
+    if (/customer|portfolio/.test(lower))
+        return c ? `${cname} is in ${c.region}, industry: ${c.industry}, opportunity: ${c.opp}. Solutions: ${c.solutions.join(', ')}.`
+                 : `You have ${CUSTOMERS.length} customers in your portfolio. Select one to view their adoption plan details.`;
+    return `I've noted your question about "<em>${q}</em>". For the most accurate UACP guidance, review the adoption plan fields and align with your implementation partner. Can I help with something more specific?`;
+}
+
+function setSingleCustomer(val) {    selCust = val === '' ? null : parseInt(val);
+    singleSubFilter = 'All Sub-Solutions';
+    render();
+}
+function toggleSingleSection(si) {
+    const body = document.getElementById('ssec-body-'+si);
+    const chev = document.getElementById('ssec-chev-'+si);
+    if (!body) return;
+    const hidden = body.classList.toggle('collapsed');
+    if (chev) chev.innerHTML = hidden ? '&#9660;' : '&#9650;';
+}
+
+function setAdoptionPlanView(v) {
+    adoptionPlanView = v;
+    const sepBtn = document.getElementById('apv-separate');
+    const sglBtn = document.getElementById('apv-single');
+    const desc   = document.getElementById('apv-desc');
+    if (sepBtn && sglBtn) {
+        const onStyle  = `flex:1;padding:6px 4px;border:1px solid var(--primary);border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;background:var(--primary);color:#fff;font-weight:600;line-height:1.3;text-align:center`;
+        const offStyle = `flex:1;padding:6px 4px;border:1px solid var(--border);border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;background:#fff;color:var(--text-2);line-height:1.3;text-align:center`;
+        sepBtn.setAttribute('style', v==='separate' ? onStyle : offStyle);
+        sglBtn.setAttribute('style', v==='single'   ? onStyle : offStyle);
+    }
+    if (desc) desc.textContent = v === 'single'
+        ? 'Alternative view: unified plan with sections per LPR'
+        : 'Current view: separate pre-close and post-close plans (default)';
+    document.getElementById('settingsDrop').classList.remove('open');
+    renderNav();
+    if (page === 'preclose-plan' || page === 'postclose-plan') render();
+}
+
+function setTheme(t) {
+    currentTheme = t;
+    document.body.classList.remove('dark-mode','colorful-mode');
+    if (t === 'dark')     document.body.classList.add('dark-mode');
+    if (t === 'colorful') document.body.classList.add('colorful-mode');
+    ['light','dark','colorful'].forEach(id => {
+        const el = document.getElementById('theme-'+id);
+        if (el) el.classList.toggle('active', id === t);
+    });
+    document.getElementById('settingsDrop').classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+    const sd = document.getElementById('settingsDrop');
+    const sb = document.querySelector('.btn-settings');
+    if (sd && sb && !sb.parentElement.contains(e.target))
+        sd.classList.remove('open');
+});
+
+function toggleMgmtDrop() {
+    document.getElementById('mgmtDrop').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+    const wrap = document.getElementById('roleBtn');
+    if (wrap && !wrap.parentElement.contains(e.target))
+        document.getElementById('mgmtDrop').classList.remove('open');
+});
+
+function setRole(r) {
+    role = r; page = ROLE_DEFAULT[r]; selCust = null; selTab = null;
+    const labels = {sales:'Sales Role', postsales:'Post Sales Role', consumption:'Consumption', management:'Management Role'};
+    const labelEl = document.getElementById('roleLabel');
+    if (labelEl) labelEl.textContent = labels[r] || r;
+    ['sales','postsales','consumption','management'].forEach(id => {
+        const el = document.getElementById('opt-'+id);
+        if (el) el.classList.toggle('active', id === r);
+    });
+    document.getElementById('mgmtDrop').classList.remove('open');
+    render();
+}
+
+/* ─── NAVIGATION ─────────────────────────────────────────── */
+function go(p) { page = p; selCust = null; selTab = null; render(); }
+function openPlan(i) { selCust = i; selTab = CUSTOMERS[i].solutions[0]; page = 'preclose-plan'; render(); }
+function openPostClose(i) { selCust = i; selTab = CUSTOMERS[i].solutions[0]; page = 'postclose-plan'; render(); }
+function openConsPlan(i)  { selCust = i; page = 'consumption-plan'; jouleMessages = []; render(); }
+function switchTab(t) { selTab = t; render(); }
+function toggleLpr(idx) {
+    const body = document.getElementById('lpr-body-'+idx);
+    const chev = document.getElementById('lpr-chev-'+idx);
+    if (!body) return;
+    const collapsed = body.classList.toggle('collapsed');
+    chev.textContent = collapsed ? '▼' : '▲';
+}
+function backToOverview() {
+    selCust = null; selTab = null;
+    page = (role === 'postsales') ? 'ps-overview' : 'customer-overview';
+    render();
+}
+function setMgmtFilter(type, val) {
+    if (type==='region')     mgmtRegion   = val;
+    if (type==='solution')   mgmtSolution = val;
+    if (type==='subsolution')mgmtSubSol   = val;
+    render();
+}
+function setChartDim(chartKey, dim) {
+    mgmtChartDims[chartKey] = dim;
+    render();
+}
+function resetMgmtFilters() {
+    mgmtRegion='All Regions'; mgmtSolution='All Solution Areas';
+    mgmtSubSol='All Sub-Solution Areas';
+    mgmtChartDims={preConf:'byRegion',postComp:'byRegion',valDrv:'byRegion',cacv:'byRegion'};
+    render();
+}
+
+/* ─── RENDER ─────────────────────────────────────────────── */
+function render() { renderNav(); renderContent(); }
+
+function renderNav() {
+    document.getElementById('sideNav').innerHTML = ROLE_NAV[role].map(item => {
+        let label = item.label;
+        if (adoptionPlanView === 'single') {
+            if (role === 'sales' && item.id === 'preclose-plan') label = 'Adoption Plan';
+            if (role === 'postsales') {
+                if (item.id === 'preclose-plan')  label = 'Sales Handover';
+                if (item.id === 'postclose-plan') label = 'Adoption Plan';
+            }
+        }
+        return `<div class="nav-item ${page === item.id ? 'active' : ''}" onclick="go('${item.id}')">
+            <span style="font-size:14px">${item.icon}</span>${label}
+        </div>`;
+    }).join('');
+}
+
+function renderContent() {
+    const map = {
+        'customer-overview': pgSalesOverview,
+        'preclose-plan':     pgPreClosePlan,
+        'ps-overview':       pgPostSalesOverview,
+        'postclose-plan':    pgPostClosePlan,
+        'consumption-plan':  pgConsumptionPlan,
+        'cons-overview':     pgConsumptionOverview,
+        'cons-plans':        pgConsumptionPlans,
+        'cons-analytics':    pgConsAnalytics,
+        'mgmt-dashboard':    pgMgmtDashboard,
+        'portfolio-overview':pgPortfolioOverview,
+        'team-performance':  pgTeamPerformance,
+        'reports':           pgReports,
+    };
+    document.getElementById('content').innerHTML = (map[page] || (() => '<p>Page not found.</p>'))();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REUSABLE: JOULE PANEL
+═══════════════════════════════════════════════════════════ */
+function joulePanel(msg) {
+    const msgs = jouleMessages.length
+        ? jouleMessages.map(m => m.role === 'user'
+            ? `<div class="joule-user-msg">${m.text}</div>`
+            : `<div class="joule-msg">${m.text}</div>`).join('')
+        : `<div class="joule-msg">${msg}</div>`;
+    return `<div class="joule-panel" id="joulePanel">
+        <div class="joule-head">
+            <div class="joule-ico">&#10022;</div>
+            <div>
+                <div class="joule-name">Joule Work</div>
+                <div class="joule-lbl">Alden &ndash; Your UACP Joule Work skill / agent</div>
+            </div>
+            <button class="joule-close" onclick="document.getElementById('joulePanel').classList.add('hidden')">&#215;</button>
+        </div>
+        <div class="joule-body" id="jouleBody">${msgs}</div>
+        <div class="joule-footer">
+            <input class="joule-input" id="jouleInput" type="text" placeholder="Ask Alden&hellip;" onkeydown="if(event.key==='Enter')jouleAsk()">
+            <button class="joule-send" onclick="jouleAsk()">&#8593;</button>
+        </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SALES – My Customer Overview
+═══════════════════════════════════════════════════════════ */
+function pgSalesOverview() {
+    return `
+    <div style="background:var(--shell-bg);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:-24px -24px 24px -24px">
+        <div>
+            <div style="font-size:16px;font-weight:700;color:#fff">
+                Welcome to <span style="color:#5ab4f5">UACP</span> &mdash; Unified Adoption &amp; Consumption Platform
+            </div>
+            <div style="font-size:12px;color:#8fbfe8;margin-top:4px;display:flex;align-items:center;gap:6px">
+                <span style="width:7px;height:7px;border-radius:50%;background:#4caf74;display:inline-block;flex-shrink:0"></span>
+                AI-powered autonomous post-sales lifecycle management
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('preclose-plan')">Pre-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('postclose-plan')">Post-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('consumption-plan')">Consumption</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)">AI Insights</span>
+        </div>
+    </div>
+    <div class="page-title">My Customer Overview</div>
+    <div class="page-sub">${CUSTOMERS.length} customers in your portfolio</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <button class="btn-primary" onclick="showMcpModal()">+ Add Customer data via MCP (Demo)</button>
+    </div>
+    <div class="d-table">
+        <div class="d-table-head" style="grid-template-columns:2fr 1.4fr 2fr">
+            <div>Customer</div><div>Opportunity</div><div>Sub-Solution Areas</div>
+        </div>
+        ${CUSTOMERS.map((c,i) => `
+        <div class="d-table-row" style="grid-template-columns:2fr 1.4fr 2fr">
+            <div>
+                <div class="cust-name">${c.name}</div>
+                <div class="cust-meta">${c.industry} &middot; ${c.region}</div>
+                <button class="btn-outline" onclick="openPlan(${i})">Open Pre-Close Plan</button>
+            </div>
+            <div class="opp-id">${c.opp}</div>
+            <div>${c.solutions.map(s=>`<span class="sol-link">${s}</span>`).join('')}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SALES – Pre-Close Plan list / detail
+═══════════════════════════════════════════════════════════ */
+function pgPreClosePlan() {
+    if (adoptionPlanView === 'single' && role !== 'postsales')
+        return pgSingleAdoptionPlan(selCust !== null ? CUSTOMERS[selCust] : null, selCust);
+    if (role === 'postsales') {
+        if (selCust !== null) return pgPreClosePlanDetail(CUSTOMERS[selCust], selCust, true);
+        return pgPSPreCloseReview();
+    }
+    if (selCust !== null) return pgPreClosePlanDetail(CUSTOMERS[selCust], selCust, false);
+    return `
+    <div class="page-title">Pre-Close Adoption Plans</div>
+    <div class="page-sub">All plans across your portfolio</div>
+    <div class="d-table">
+        <div class="d-table-head" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr">
+            <div>Customer</div><div>Opportunity</div><div>Solutions</div><div>Progress</div><div>Status</div>
+        </div>
+        ${CUSTOMERS.map((c,i)=>{
+            const pct=[45,20,60][i],tc=['tag-o','tag-b','tag-g'][i],lbl=['In Progress','Planned','On Track'][i];
+            return `
+            <div class="d-table-row" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr;cursor:pointer" onclick="openPlan(${i})">
+                <div><div class="cust-name">${c.name}</div><div class="cust-meta">${c.industry} &middot; ${c.region}</div></div>
+                <div class="opp-id">${c.opp}</div>
+                <div>${c.solutions.map(s=>`<span class="sol-link">${s}</span>`).join('')}</div>
+                <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div><span class="prog-pct">${pct}%</span></div>
+                <div><span class="tag ${tc}">${lbl}</span></div>
+            </div>`;
+        }).join('')}
+    </div>`;}
+
+function pgPSPreCloseReview() {
+    const acctRows = [
+        ['Volkswagen (VOLKSWAGEN)','0300110001','14 Jan 2026','Sarah Chen'],
+        ['Space X (SPACE-X)',      '0300120001','20 Feb 2026','Marcus Owusu'],
+        ['Amazon (AMAZON)',        '0300130001','08 Mar 2026','Elena Fischer'],
+    ].map(([name,opp,dt,by])=>`<tr>
+        <td style="font-weight:600">${name}</td>
+        <td style="color:var(--text-2)">${opp}</td>
+        <td style="color:var(--text-2)">${dt}</td>
+        <td style="color:var(--primary)">${by}</td>
+    </tr>`).join('');
+
+    const hoRows = [
+        [0,'Volkswagen','0300110001',['Cloud ERP Private'],['LPR-10001 S/4HANA Cloud Private Edition','LPR-10002 SAP BTP Extension Suite'],'tag-g','Signed off','Julia Bergmann','10 Feb 2026'],
+        [1,'Space X','0300120001',['Core HR and Payroll public','Business Network'],['LPR-30001 SAP SuccessFactors HCM Suite','LPR-30002 SAP Payroll','LPR-20001 SAP Business Network'],'tag-o','New','Tom Nkemdirim','–'],
+        [2,'Amazon','0300130001',['Cloud ERP Private'],['LPR-10001 S/4HANA Cloud Private Edition','LPR-10002 SAP BTP Extension Suite'],'tag-o','New','Priya Raghavan','–'],
+    ].map(([idx,name,opp,sols,lprs,tagCls,status,reqBy,sub])=>`<tr>
+        <td><button class="btn-outline" onclick="showHandoverModal(${idx},'${status}')">Open</button></td>
+        <td style="font-weight:600">${name}</td>
+        <td style="color:var(--text-2)">${opp}</td>
+        <td>${sols.map(s=>`<span style="display:block;color:var(--primary);font-size:11px;margin-bottom:1px">&middot; ${s}</span>`).join('')}</td>
+        <td>${lprs.map(l=>`<span style="display:block;font-size:11px;color:var(--text-2);margin-bottom:1px;line-height:1.3">&middot; ${l}</span>`).join('')}</td>
+        <td><span class="tag ${tagCls}">${tagCls==='tag-g'?'&#9679; ':'&#9679; '}${status}</span></td>
+        <td style="color:var(--primary)">${reqBy}</td>
+        <td style="color:var(--text-2)">${sub}</td>
+    </tr>`).join('');
+
+    return `
+    <div class="page-title">Pre-Close Adoption Plan</div>
+    <div class="page-sub">You are assigned to the following opportunities. Please review and sign off on the adoption information prepared by a salesperson for handover.</div>
+    <div class="pc-layout">
+        <div class="pc-main">
+            <div class="s-card" style="margin-bottom:16px">
+                <div class="s-title">My account assignment</div>
+                <table class="simple-tbl">
+                    <thead><tr><th>Customer Name (ID)</th><th>Latest Opportunity</th><th>Assigned to me on</th><th>Assigned to me by</th></tr></thead>
+                    <tbody>${acctRows}</tbody>
+                </table>
+            </div>
+            <div class="s-card">
+                <div class="s-title">&#128203; Sales to Success: handed over documents from Pre-Close</div>
+                <div style="overflow-x:auto">
+                    <table class="ho-tbl">
+                        <thead><tr><th></th><th>Customer</th><th>Opp #</th><th>Sub-Solution Areas</th><th>LPRs</th><th>Status</th><th>Requested by</th><th>Submitted</th></tr></thead>
+                        <tbody>${hoRows}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        ${joulePanel('Hi! You have 2 new handover documents received from Sales that still need your sign-off. I listed them in the table below. You can ask me which one is most urgent.')}
+    </div>`;}
+
+function pgPostClosePlan() {
+    if (adoptionPlanView === 'single')
+        return pgSingleAdoptionPlan(selCust !== null ? CUSTOMERS[selCust] : null, selCust);
+    if (selCust !== null) return pgPostClosePlanDetail(CUSTOMERS[selCust], selCust);
+    return `
+    <div class="page-title">Post-Close Adoption Plan</div>
+    <div class="page-sub">Select a customer to view their Post-Close Adoption Plan</div>
+    <div class="d-table">
+        <div class="d-table-head" style="grid-template-columns:2fr 1.3fr 2fr 1fr">
+            <div>Customer</div><div>Opportunity</div><div>Solutions</div><div></div>
+        </div>
+        ${CUSTOMERS.map((c,i)=>`
+        <div class="d-table-row" style="grid-template-columns:2fr 1.3fr 2fr 1fr">
+            <div><div class="cust-name">${c.name}</div><div class="cust-meta">${c.industry} &middot; ${c.region}</div></div>
+            <div class="opp-id">${c.opp}</div>
+            <div>${c.solutions.map(s=>`<span class="sol-link">${s}</span>`).join('')}</div>
+            <div><button class="btn-outline" onclick="openPostClose(${i})">Open</button></div>
+        </div>`).join('')}
+    </div>`;}
+
+function pgPostClosePlanDetail(c, idx) {
+    const tab  = selTab || c.solutions[0];
+    const lprs = (LPR_DATA[idx]&&LPR_DATA[idx][tab])||[];
+    const tabs = c.solutions.map(s=>`<div class="sol-tab ${s===tab?'active':''}" onclick="switchTab('${s.replace(/'/g,"\\'")}')"> ${s}</div>`).join('');
+    const sc = {'Green':'#1a8d50','Red':'#c5221f','Yellow':'#b35900'};
+
+    const pcSel = (cur, opts) => {
+        const list = opts.includes(cur) ? opts : ['Select…',...opts,...(cur&&cur!=='Select…'?[cur]:[])];
+        return `<select>${list.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('')}</select>`;
+    };
+    const GOLIVE_OPTS    = ['Select…','Regional go-lives planned','Big bang go-live','Phased rollout','Parallel run','Pilot first, then rollout','Agile incremental go-live','Hypercare-led go-live'];
+    const ONBOARD_TYPE   = ['Select…','Full onboarding','Guided onboarding','Self onboarding','Accelerated onboarding','Premium onboarding','Minimal onboarding'];
+    const ONBOARD_STATUS = ['Select…','Not started','In progress','At risk','Completed','On hold','Delayed'];
+    const IMPL_PARTY     = ['Select…','Partner','SAP','Customer','Shared delivery','System integrator','Managed service provider'];
+    const IMPL_PARTNER   = ['Select…','Accenture','Deloitte','IBM','T-Systems','Capgemini','Wipro','Infosys','TCS','KPMG','NTT Data'];
+    const IMPL_STATUS    = ['Green','Yellow','Red'];
+    const VALIDATED_OPTS = ['Select…','Yes','No','Pending review','In progress','Partially validated','Not applicable'];
+
+    const cards = lprs.map((lpr,li)=>`
+    <div class="lpr-card">
+        <div class="lpr-card-head" onclick="toggleLpr(${li})">
+            <span class="lpr-card-id">LPR: ${lpr.id} &middot; ${lpr.name}</span>
+            <span class="badge-ai" style="flex-shrink:0">&#10022; Filled by AI/ML</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer" onclick="event.stopPropagation()">
+                    Set LPR live <input type="checkbox" onchange="setLprLive(this,'${lpr.id}','${lpr.name}',${idx})">
+                </label>
+                <span id="lpr-chev-${li}" style="color:var(--text-2);font-size:11px">&#9650;</span>
+            </div>
+        </div>
+        <div class="lpr-card-body" id="lpr-body-${li}">
+            <div class="form-grid">
+                <div class="ff"><div class="ff-lbl">Go-live Strategy <span class="badge-human">Human input required</span></div>${pcSel(lpr.goLiveStrategy,GOLIVE_OPTS)}</div>
+                <div class="ff"><div class="ff-lbl">Onboarding Type <span class="badge-ai">&#10022; Filled by AI/ML</span></div>${pcSel(lpr.onboardingType,ONBOARD_TYPE)}</div>
+                <div class="ff"><div class="ff-lbl">Onboarding Status <span class="badge-ai">&#10022; Filled by AI/ML</span></div>${pcSel(lpr.onboardingStatus,ONBOARD_STATUS)}</div>
+                <div class="ff"><div class="ff-lbl">Implementation Party <span class="badge-human">Human input required</span></div>${pcSel(lpr.implParty,IMPL_PARTY)}</div>
+                <div class="ff"><div class="ff-lbl">Implementation Partner <span class="badge-human">Human input required</span></div>${pcSel(lpr.implPartner,IMPL_PARTNER)}</div>
+                <div class="ff"><div class="ff-lbl">Kickoff Date <span class="badge-human">Human input required</span></div><div class="ff-date-wrap"><input type="date" value="${toDateInput(lpr.kickoff)}" onchange="updateLprDate(${idx},'${tab.replace(/'/g,"\\'")}',${li},'kickoff',this.value)"></div></div>
+                <div class="ff"><div class="ff-lbl">Planned Go-live Date <span class="badge-ai">&#10022; Filled by AI/ML</span></div><div class="ff-date-wrap"><input type="date" value="${toDateInput(lpr.plannedGoLive)}" onchange="updateLprDate(${idx},'${tab.replace(/'/g,"\\'")}',${li},'plannedGoLive',this.value)"></div></div>
+                <div class="ff"><div class="ff-lbl">Confirmed Go-live Date <span class="badge-human">Human input required</span></div><div class="ff-date-wrap"><input type="date" value="${toDateInput(lpr.confirmedGoLive)}" onchange="updateLprDate(${idx},'${tab.replace(/'/g,"\\'")}',${li},'confirmedGoLive',this.value)"></div></div>
+            </div>
+            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+                <div class="ff"><div class="ff-lbl">Implementation Status <span class="badge-ai">&#10022; Filled by AI/ML</span></div>
+                    <select style="color:${sc[lpr.implStatus]||'var(--text-1)'};font-weight:600">
+                        ${IMPL_STATUS.map(o=>`<option${o===lpr.implStatus?' selected':''} style="color:${sc[o]||'var(--text-1)'}">${o}</option>`).join('')}
+                    </select></div>
+                <div class="ff"><div class="ff-lbl">Validated Handover <span class="badge-ai">&#10022; Filled by AI/ML</span></div>${pcSel(lpr.validatedHandover,VALIDATED_OPTS)}</div>
+            </div>
+            <div style="margin-top:16px">
+                <div class="ff"><div class="ff-lbl">Status Reason <span class="badge-human">Human input required</span></div><input type="text" value="${lpr.statusReason}"></div>
+            </div>
+        </div>
+    </div>`).join('');
+    return `
+    <div class="page-title">Post-Close Adoption Plan</div>
+    <div class="page-sub">Track go-live readiness per LPR</div>
+    <div class="pc-layout">
+        <div class="pc-main">
+            <div class="pc-block">
+                <div class="cust-bar">
+                    <span class="cust-bar-lbl">Customer</span>
+                    <select class="cust-bar-sub-sel" style="min-width:160px" onchange="if(this.value!=='')openPostClose(parseInt(this.value))">
+                        <option value="">Select a customer...</option>
+                        ${CUSTOMERS.map((cu,i)=>`<option value="${i}"${i===idx?' selected':''}>${cu.name}</option>`).join('')}
+                    </select>
+                    <span class="cust-bar-opp">Opportunity: ${c.opp}</span>
+                </div>
+                <div class="sol-tabs">${tabs}</div>
+                <div>${cards}</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;padding:14px 0">
+                <button class="btn-primary" onclick="saveDemo(this)">Save</button>
+            </div>
+        </div>
+        ${joulePanel('I created the Post-Close Adoption Plan draft. Please review and fill in the remaining human-input fields, then save.')}
+    </div>`;}
+
+
+function pgPreClosePlanDetail(c, idx, isReview) {
+    const tab   = selTab || c.solutions[0];
+    const d     = (PLAN_DATA[idx] && PLAN_DATA[idx][tab]) || {};
+    const units = d.aiUnits || [];
+
+    const tabs = c.solutions.map(s => `
+        <div class="sol-tab ${s === tab ? 'active' : ''}" onclick="switchTab('${s.replace(/'/g,"\\'")}')">
+            ${s}
+        </div>`).join('');
+
+    const sel = (cur, opts) => {
+        const list = opts.includes(cur) ? opts : ['Select…', ...opts, ...(cur && cur!=='Select…'?[cur]:[])];
+        return `<select>${list.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('')}</select>`;
+    };
+
+    const VALUE_DRIVER_OPTS = [
+        'Select…',
+        'Improve customer satisfaction',
+        'Improve user experience and interface solutions',
+        'Reduce compliance and risk management cost',
+        'Increase operational efficiency',
+        'Accelerate digital transformation',
+        'Reduce total cost of ownership',
+        'Improve employee productivity',
+        'Enable innovation and agility',
+        'Increase employee engagement',
+        'Reduce procurement and supply chain costs',
+    ];
+    const IMPL_BY_OPTS = [
+        'Select…',
+        'Partner implementation',
+        'SAP implementation',
+        'Customer self-implementation',
+        'Hybrid (SAP + Partner)',
+        'System integrator',
+        'Managed service provider',
+        'Shared services centre',
+    ];
+    const PARTNER_OPTS = [
+        'Select…',
+        'Accenture','BearingPoint','Capgemini','Deloitte',
+        'EY','IBM','Infosys','KPMG',
+        'NTT Data','PwC','T-Systems','TCS','Wipro',
+    ];
+    const GOLIVE_STRATEGY_OPTS = [
+        'Select…',
+        'Regional go-lives planned',
+        'Big bang go-live',
+        'Phased rollout',
+        'Parallel run',
+        'Pilot first, then rollout',
+        'Agile incremental go-live',
+        'Hypercare-led go-live',
+    ];
+    const AI_OPTS = [
+        'Select…',
+        'Yes',
+        'No',
+        'Under evaluation',
+        'Planned for Phase 2',
+        'In scope but not yet defined',
+        'Excluded from current scope',
+    ];
+
+    const fields = `
+    <div class="form-grid">
+        <div class="ff">
+            <div class="ff-lbl">Value Drivers <span class="badge-ai">&#10022; Filled by AI/ML</span></div>
+            ${sel(d.valueDriver||'Select…', VALUE_DRIVER_OPTS)}
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Implemented by <span class="badge-human">Human input required</span></div>
+            ${sel(d.implementedBy||'Select…', IMPL_BY_OPTS)}
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">System implementation partner <span class="badge-human">Human input required</span></div>
+            ${sel(d.sysPartner||'Select…', PARTNER_OPTS)}
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Partner contact (person) <span class="badge-human">Human input required</span></div>
+            <input type="text" value="${d.partnerContact || ''}">
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Kick-off date <span class="badge-human">Human input required</span></div>
+            <div class="ff-date-wrap">
+                <input type="date" value="${toDateInput(d.kickOff)}" onchange="updatePlanDate(${idx},'${tab}','kickOff',this.value)">
+            </div>
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Projected Business Go-live Date <span class="badge-ai">&#10022; Filled by AI/ML</span></div>
+            <div class="ff-date-wrap">
+                <input type="date" value="${toDateInput(d.projGoLive)}" onchange="updatePlanDate(${idx},'${tab}','projGoLive',this.value)">
+                <span class="cal-ico">&#128197;</span>
+            </div>
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Go-live Strategy <span class="badge-human">Human input required</span></div>
+            ${sel(d.goLiveStrategy||'Select…', GOLIVE_STRATEGY_OPTS)}
+        </div>
+        <div class="ff">
+            <div class="ff-lbl">Are AI use-cases included? <span class="badge-ai">&#10022; Filled by AI/ML</span></div>
+            ${sel(d.aiUseCases||'Select…', AI_OPTS)}
+        </div>
+    </div>
+    <div class="ai-sub">
+        <div class="ai-sub-title">AI units for ${tab}</div>
+        <div class="ai-sub-row hd"><div>Sub-Solution</div><div>AI unit</div><div>Value driver</div></div>
+        ${units.map(u => `
+        <div class="ai-sub-row">
+            <div>${u.sub}</div>
+            <div style="font-weight:600">${u.unit}</div>
+            <div>${u.driver}</div>
+        </div>`).join('')}
+    </div>`;
+
+    return `
+    <div class="page-title">Pre-Close Adoption Plan</div>
+    <div class="page-sub">Handover details captured from the sales opportunity</div>
+
+    <div class="pc-layout">
+        <div class="pc-main">
+            <div class="pc-block">
+                <div class="cust-bar">
+                    <span class="cust-bar-lbl">Customer</span>
+                    <select class="cust-bar-sub-sel" style="min-width:150px" onchange="if(this.value!=='')openPlan(parseInt(this.value))">
+                        <option value="">Select a customer...</option>
+                        ${CUSTOMERS.map((cu,i)=>`<option value="${i}"${i===idx?' selected':''}>${cu.name}</option>`).join('')}
+                    </select>
+                    <span class="cust-bar-opp">Opportunity: ${c.opp}</span>
+                </div>
+                <div class="sol-tabs">${tabs}</div>
+                <div class="form-card">${fields}</div>
+                <div class="form-actions">
+                    <div class="form-actions-left">
+                        ${isReview
+                          ? `<button class="btn-primary">&#10003; Sign Off</button>
+                             <button class="btn-ghost">Send back</button>`
+                          : `<button class="btn-primary" onclick="showHandoverModal(${idx})">Handover to Post Sales</button>
+                             <button class="btn-primary">Upload additional information</button>`}
+                    </div>
+                    <button class="btn-primary" onclick="saveDemo(this)">Save</button>
+                </div>
+            </div>
+        </div>
+        ${joulePanel(isReview
+            ? 'This Pre-Close Adoption Plan was submitted by the Sales team for your review. Please check all fields and sign off — or send back with a comment.'
+            : 'I created the Pre-Close Adoption Plan for you and precalculated information like the go-live date or Value Driver. Please check.')}
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   POST-SALES – My Customer Overview (main page)
+═══════════════════════════════════════════════════════════ */
+function pgPostSalesOverview() {
+    const custRows = CUSTOMERS.map((c,i) => `
+    <div class="d-table-row" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr">
+        <div>
+            <div class="cust-name">${c.name}</div>
+            <div class="cust-meta">${c.industry} &middot; ${c.region}</div>
+        </div>
+        <div class="opp-id">${c.opp}</div>
+        <div>${c.solutions.map(s=>`<span class="sol-link">${s}</span>`).join('')}</div>
+        <div><button class="btn-outline" onclick="openPlan(${i})">Open</button></div>
+        <div><button class="btn-outline" onclick="openPostClose(${i})">Open</button></div>
+    </div>`).join('');
+
+    const attnRows = [
+        ['Space X',  'Aerospace', 'AMER', 'at-signoff','● Sign-off required',   'Core HR and Payroll public, Business Network'],
+        ['Amazon',   'Retail / Cloud','AMER','at-signoff','● Sign-off required', 'Cloud ERP Private'],
+        ['Space X',  'Aerospace', 'AMER', 'at-red',    '● Project status red',  'Core HR and Payroll public &mdash; LPR 30001 SAP SuccessFactors HCM Suite'],
+    ].map(([n,ind,reg,cls,action,detail]) => `
+    <div class="d-table-row" style="grid-template-columns:2fr 1.5fr 3fr auto">
+        <div><div class="cust-name">${n}</div><div class="cust-meta">${ind} &middot; ${reg}</div></div>
+        <div class="${cls}">${action}</div>
+        <div style="font-size:13px">${detail}</div>
+        <div><button class="btn-outline" onclick="go('preclose-plan')">Review</button></div>
+    </div>`).join('');
+
+    const lprRows = [
+        ['Volkswagen','Automotive','EMEA',      'Cloud ERP Private',        'LPR-11001','S/4HANA Cloud Private Edition',    'dot-o','Post-Close'],
+        ['Space X',   'Aerospace', 'AMER',      'Core HR and Payroll public','LPR-31001','SAP SuccessFactors HCM Suite',     'dot-g','Consumption'],
+        ['Space X',   'Aerospace', 'AMER',      'Core HR and Payroll public','LPR-31002','SAP Payroll',                      'dot-g','Consumption'],
+        ['Space X',   'Aerospace', 'AMER',      'Business Network',         'LPR-32001','SAP Business Network',             'dot-g','Consumption'],
+        ['Amazon',    'Retail / Cloud','AMER',  'Cloud ERP Private',        'LPR-11001','S/4HANA Cloud Private Edition',    'dot-k','Pre-Close'],
+        ['Amazon',    'Retail / Cloud','AMER',  'Cloud ERP Private',        'LPR-11002','SAP BTP Extension Suite',          'dot-k','Pre-Close'],
+    ].map(([n,ind,reg,sub,lprId,lprName,dotCls,state]) => `
+    <div class="d-table-row" style="grid-template-columns:2fr 1.6fr 1fr 2fr 1fr">
+        <div><div class="cust-name">${n}</div><div class="cust-meta">${ind} &middot; ${reg}</div></div>
+        <div class="sol-link">${sub}</div>
+        <div style="font-size:13px;color:var(--text-2)">${lprId}</div>
+        <div style="font-size:13px">${lprName}</div>
+        <div class="lpr-state"><span class="dot ${dotCls}"></span>${state}</div>
+    </div>`).join('');
+
+    return `
+    <div style="background:var(--shell-bg);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:-24px -24px 24px -24px">
+        <div>
+            <div style="font-size:16px;font-weight:700;color:#fff">
+                Welcome to <span style="color:#5ab4f5">UACP</span> &mdash; Unified Adoption &amp; Consumption Platform
+            </div>
+            <div style="font-size:12px;color:#8fbfe8;margin-top:4px;display:flex;align-items:center;gap:6px">
+                <span style="width:7px;height:7px;border-radius:50%;background:#4caf74;display:inline-block;flex-shrink:0"></span>
+                AI-powered autonomous post-sales lifecycle management
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('preclose-plan')">Pre-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('postclose-plan')">Post-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('consumption-plan')">Consumption</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)">AI Insights</span>
+        </div>
+    </div>
+    <div class="page-title">My Customer Overview</div>
+    <div class="page-sub">${CUSTOMERS.length} customers in your portfolio</div>
+
+    <div class="ps-layout">
+        <div class="ps-main">
+            <div class="welcome-banner">
+                <div>Welcome to <strong>UACP</strong> &mdash; Unified Adoption &amp; Consumption Platform</div>
+                <div class="wb-sub">Your customer data has been fetched from your CRM. Connect UACP to your real data via the MCP server to see live information.</div>
+            </div>
+
+            <!-- Customer table -->
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button class="btn-primary" onclick="showMcpModal()">+ Add Customer data via MCP (Demo)</button>
+            </div>
+            <div class="d-table" style="margin-bottom:18px">
+                <div class="d-table-head" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr">
+                    <div>Customer</div><div>Opportunity</div><div>Sub-Solutions</div>
+                    <div>Open Post-Close Adoption Plan</div><div>Open Consumption Plan</div>
+                </div>
+                ${custRows}
+            </div>
+
+            <!-- Attention required -->
+            <div class="ps-section">
+                <div class="ps-sec-head attn-head">
+                    <div class="ps-sec-title">Attention required</div>
+                    <div class="ps-sec-sub">Open sign-offs and accounts with red Post-Close LPR status</div>
+                </div>
+                <div class="d-table-head" style="grid-template-columns:2fr 1.5fr 3fr auto">
+                    <div>Customer</div><div>Action type</div><div>Details</div><div></div>
+                </div>
+                ${attnRows}
+            </div>
+
+            <!-- LPR Overview -->
+            <div class="ps-section">
+                <div class="ps-sec-head">
+                    <div class="ps-sec-title">LPR Overview by Customer</div>
+                    <div class="ps-sec-sub">All License Product References per customer</div>
+                </div>
+                <div class="lpr-filter">
+                    <span class="lpr-filter-lbl">Customer</span>
+                    <select><option>All Customers</option>${CUSTOMERS.map(c=>`<option>${c.name}</option>`).join('')}</select>
+                    <span class="lpr-filter-lbl">Sub-Solution Area</span>
+                    <select><option>All Sub-Solutions</option><option>Cloud ERP Private</option><option>Core HR and Payroll public</option><option>Business Network</option></select>
+                </div>
+                <div class="d-table-head" style="grid-template-columns:2fr 1.6fr 1fr 2fr 1fr">
+                    <div>Customer</div><div>Sub-Solution Area</div><div>LPR ID</div><div>LPR Name</div><div>State</div>
+                </div>
+                ${lprRows}
+            </div>
+        </div>
+
+        ${joulePanel('Following accounts need your attention. See the Attention required section below.')}
+    </div>`;
+}
+
+function pgConsumptionPlan() {
+    const idx  = selCust !== null ? selCust : 0;
+    const c    = CUSTOMERS[idx];
+    const all  = CONS_DATA[idx] || [];
+    const fmtC = n => '$' + n.toLocaleString();
+    const subs = ['All Sub-Solutions', ...new Set(all.map(r => r.sub))];
+    const lprs = ['All LPRs',          ...new Set(all.map(r => r.lprId + ' ' + r.lprName))];
+    const qtrs = ['All Quarters',      ...new Set(all.map(r => r.quarter))];
+    const rows = all.filter(r =>
+        (consSub === 'All Sub-Solutions' || r.sub === consSub) &&
+        (consLpr === 'All LPRs'          || (r.lprId + ' ' + r.lprName) === consLpr) &&
+        (consQtr === 'All Quarters'      || r.quarter === consQtr)
+    );
+    const selSty = `border:1px solid var(--border);border-radius:4px;padding:4px 24px 4px 9px;font-size:13px;font-family:inherit;-webkit-appearance:none;appearance:none;background:#fff url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%228%22 height=%225%22%3E%3Cpath d=%22M0 0l4 5 4-5z%22 fill=%22%236a6d70%22/%3E%3C/svg%3E') no-repeat right 7px center;max-width:180px`;
+    return `
+    <div class="page-title">Consumption Plan</div>
+    <div class="page-sub">Predicted consumption value by LPR and quarter</div>
+    <div class="pc-layout">
+        <div class="pc-main">
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:6px 6px 0 0;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span style="font-size:12px;color:var(--text-2)">Customer</span>
+                <select class="cust-bar-sub-sel" onchange="if(this.value!==''){consSub='All Sub-Solutions';consLpr='All LPRs';consQtr='All Quarters';openConsPlan(parseInt(this.value))}">
+                    <option value="">Select a customer...</option>
+                    ${CUSTOMERS.map((cu,i)=>`<option value="${i}"${i===idx?' selected':''}>${cu.name}</option>`).join('')}
+                </select>
+                <span style="font-size:12px;color:var(--text-2)">Sub-Solution Area</span>
+                <select style="${selSty}" onchange="setConsSub(this.value)">
+                    ${subs.map(s=>`<option${s===consSub?' selected':''}>${s}</option>`).join('')}
+                </select>
+                <span style="font-size:12px;color:var(--text-2)">LPR</span>
+                <select style="${selSty}" onchange="setConsLpr(this.value)">
+                    ${lprs.map(l=>`<option${l===consLpr?' selected':''}>${l}</option>`).join('')}
+                </select>
+                <span style="font-size:12px;color:var(--text-2)">Quarter</span>
+                <select style="${selSty}" onchange="setConsQtr(this.value)">
+                    ${qtrs.map(q=>`<option${q===consQtr?' selected':''}>${q}</option>`).join('')}
+                </select>
+            </div>
+            <div style="overflow-x:auto;background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px">
+                <table style="border-collapse:collapse;min-width:900px;width:100%">
+                    <thead><tr>
+                        ${['Sub-Solution Area','LPR ID','LPR Name','Quarter','ACV','Predicted cACV','Adjust. MAU','Adjustment Reason','Final Plan MAU %','Planned cACV']
+                          .map(h=>`<th style="padding:9px 12px;background:#fafafa;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:12px;font-weight:600;color:var(--text-2);text-align:left;white-space:nowrap">${h}</th>`).join('')}
+                    </tr></thead>
+                    <tbody>
+                        ${rows.length === 0
+                          ? `<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text-2);font-size:13px">No data matches the selected filters.</td></tr>`
+                          : rows.map((r,ri)=>`<tr>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px;color:var(--primary)">${r.sub}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px;color:var(--text-2)">${r.lprId}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px">${r.lprName}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px;font-weight:600">${r.quarter}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px">${fmtC(r.acv)}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px">
+                                <div style="font-weight:600">${fmtC(r.predCacv)}</div>
+                                <div style="font-size:10px;color:#7b5ea7;font-weight:600;margin-top:2px">&#10022; Filled by AI/ML</div>
+                            </td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0">
+                                <select style="border:1px solid var(--border);border-radius:4px;padding:3px 20px 3px 7px;font-size:12px;font-family:inherit;-webkit-appearance:none;appearance:none;background:#fff url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%228%22 height=%225%22%3E%3Cpath d=%22M0 0l4 5 4-5z%22 fill=%22%236a6d70%22/%3E%3C/svg%3E') no-repeat right 6px center;cursor:pointer"
+                                    onchange="applyMauAdj('${idx}-${ri}',${r.finalMau},${r.predCacv},this.value)">
+                                    ${['-50','-40','-30','-20','-10','0','+10','+20','+30','+40','+50'].map(v=>`<option value="${v}"${v==='0'?' selected':''}>${v}%</option>`).join('')}
+                                </select>
+                            </td>
+                            <td style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0">
+                                <select style="border:1px solid var(--border);border-radius:4px;padding:3px 20px 3px 7px;font-size:12px;font-family:inherit;-webkit-appearance:none;appearance:none;background:#fff url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%228%22 height=%225%22%3E%3Cpath d=%22M0 0l4 5 4-5z%22 fill=%22%236a6d70%22/%3E%3C/svg%3E') no-repeat right 6px center;cursor:pointer;min-width:170px">
+                                    <option value="">Select a reason…</option>
+                                    ${['Underutilization – adoption below forecast','Overutilization – adoption exceeded forecast','Delayed go-live','Accelerated go-live','Customer requested scope reduction','Customer requested scope increase','License count adjustment','Project timeline change','Budget constraint','Technical dependency','Partner delivery change','Executive decision / priority change'].map(o=>`<option>${o}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td id="mau-${idx}-${ri}" style="padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid #f0f0f0;font-size:13px;text-align:center">${r.finalMau}%</td>
+                            <td id="cacv-${idx}-${ri}" style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px">${fmtC(r.plannedCacv)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex;justify-content:flex-end;padding:14px 0">
+                <button class="btn-primary" onclick="saveDemo(this)">Save</button>
+            </div>
+        </div>
+        ${(()=>{
+            const totalCacv = all.reduce((s,r)=>s+r.predCacv,0);
+            const lprIds = [...new Set(all.map(r=>r.lprId))];
+            const qtrSet = [...new Set(all.map(r=>r.quarter))];
+            return joulePanel(`I created the Consumption Plan for <strong>${c.name}</strong> with <strong>${all.length} entries</strong> across ${lprIds.length} LPR${lprIds.length!==1?'s':''} and ${qtrSet.length} quarter${qtrSet.length!==1?'s':''}.<br><br>Total predicted cACV: <strong>${fmtC(totalCacv)}</strong> &mdash; prefilled by AI/ML. Please review each quarter and adjust MAU if needed, then save.`);
+        })()}
+    </div>`;}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CONSUMPTION ROLE PAGES
+═══════════════════════════════════════════════════════════ */
+function pgConsumptionOverview() {
+    return `
+    <div style="background:var(--shell-bg);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:-24px -24px 24px -24px">
+        <div>
+            <div style="font-size:16px;font-weight:700;color:#fff">
+                Welcome to <span style="color:#5ab4f5">UACP</span> &mdash; Unified Adoption &amp; Consumption Platform
+            </div>
+            <div style="font-size:12px;color:#8fbfe8;margin-top:4px;display:flex;align-items:center;gap:6px">
+                <span style="width:7px;height:7px;border-radius:50%;background:#4caf74;display:inline-block;flex-shrink:0"></span>
+                AI-powered autonomous post-sales lifecycle management
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('preclose-plan')">Pre-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('postclose-plan')">Post-Close</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)" onclick="go('consumption-plan')">Consumption</span>
+            <span style="padding:4px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.08)">AI Insights</span>
+        </div>
+    </div>
+    <div class="page-title">My Customer Overview</div>
+    <div class="page-sub">Consumption view &middot; ${CUSTOMERS.length} customers</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi-card"><div class="kpi-label">Total Contracted AU</div><div class="kpi-val">440</div><div class="kpi-trend">Across all customers</div></div>
+        <div class="kpi-card"><div class="kpi-label">Total Consumed AU</div><div class="kpi-val">339</div><div class="kpi-trend">&#8593; 77% avg utilization</div></div>
+        <div class="kpi-card"><div class="kpi-label">Under-consumption Risk</div><div class="kpi-val" style="color:#e87722">1</div><div class="kpi-trend warn">Space X Core HR</div></div>
+    </div>
+    <div class="d-table">
+        <div class="d-table-head" style="grid-template-columns:2fr 1.5fr 1.3fr 1fr 1fr 1fr">
+            <div>Customer</div><div>Solution</div><div>LPR</div><div>Contracted</div><div>Consumed</div><div>Health</div>
+        </div>
+        ${[
+            ['Volkswagen','Cloud ERP Private',   'LPR-11001','120 AU','86 AU', 72,'tag-g'],
+            ['Space X',   'Core HR and Payroll', 'LPR-31001','40 AU', '15 AU',38,'tag-o'],
+            ['Space X',   'Business Network',    'LPR-32001','40 AU', '40 AU',100,'tag-g'],
+            ['Amazon',    'Cloud ERP Private',   'LPR-11001','200 AU','182 AU',91,'tag-g'],
+        ].map(([n,sol,lpr,cont,cons,pct,t])=>`
+        <div class="d-table-row" style="grid-template-columns:2fr 1.5fr 1.3fr 1fr 1fr 1fr">
+            <div class="cust-name">${n}</div>
+            <div style="font-size:13px">${sol}</div>
+            <div style="font-size:13px;color:var(--text-2)">${lpr}</div>
+            <div>${cont}</div>
+            <div>${cons}</div>
+            <div><span class="tag ${t}">${pct>=80?'On Track':pct>=50?'Monitor':'At Risk'}</span></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function pgConsumptionPlans() {
+    return `
+    <div class="page-title">Consumption Plans</div>
+    <div class="page-sub">Detailed consumption plans per customer and LPR</div>
+    ${CUSTOMERS.map((c,i)=>`
+    <div class="s-card">
+        <div class="s-title">${c.name} <span style="font-size:12px;font-weight:400;color:var(--text-2)">${c.industry} &middot; ${c.region} &middot; ${c.opp}</span></div>
+        <div class="m-row m-head" style="grid-template-columns:2fr 1fr 1fr 1.3fr 1fr">
+            <div>Solution / LPR</div><div>Contracted</div><div>Consumed</div><div>Progress</div><div>Status</div>
+        </div>
+        ${c.solutions.map(s=>`
+        <div class="m-row" style="grid-template-columns:2fr 1fr 1fr 1.3fr 1fr">
+            <div style="font-size:13px">${s}</div>
+            <div>80 AU</div>
+            <div>${[60,30,75][i]} AU</div>
+            <div class="prog-wrap">
+                <div class="prog-bar"><div class="prog-fill" style="width:${[75,38,94][i]}%"></div></div>
+                <span class="prog-pct">${[75,38,94][i]}%</span>
+            </div>
+            <div><span class="tag ${['tag-g','tag-o','tag-g'][i]}">${['On Track','At Risk','On Track'][i]}</span></div>
+        </div>`).join('')}
+    </div>`).join('')}`;
+}
+
+function pgConsAnalytics() {
+    return `
+    <div class="page-title">Analytics</div>
+    <div class="page-sub">Consumption trends and forecasts &middot; Q3 2026</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card"><div class="kpi-label">Avg Utilization</div><div class="kpi-val">77%</div><div class="kpi-trend">&#8593; +5pp vs Q2</div></div>
+        <div class="kpi-card"><div class="kpi-label">At-Risk LPRs</div><div class="kpi-val" style="color:#e87722">1</div><div class="kpi-trend warn">Below 50% threshold</div></div>
+        <div class="kpi-card"><div class="kpi-label">Forecast Overage</div><div class="kpi-val">0</div><div class="kpi-trend">No overage risk</div></div>
+        <div class="kpi-card"><div class="kpi-label">Renewals in 90d</div><div class="kpi-val">1</div><div class="kpi-trend warn">Space X Dec 2026</div></div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MANAGEMENT PAGES
+═══════════════════════════════════════════════════════════ */
+function pgPortfolioOverview() {
+    return `
+    <div class="page-title">Portfolio Overview</div>
+    <div class="page-sub">EMEA &amp; AMER &middot; Q3 2026</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card"><div class="kpi-label">Total Customers</div><div class="kpi-val">3</div><div class="kpi-trend">&#8593; +1 vs Q2</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-val">€8.2M</div><div class="kpi-trend">&#8593; +12%</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg Adoption Rate</div><div class="kpi-val">67%</div><div class="kpi-trend">&#8593; +8pp vs Q2</div></div>
+        <div class="kpi-card"><div class="kpi-label">At-Risk</div><div class="kpi-val" style="color:#e87722">1</div><div class="kpi-trend warn">Space X</div></div>
+    </div>
+    <div class="s-card">
+        <div class="s-title">Customer Portfolio</div>
+        <div class="d-table-head" style="grid-template-columns:2fr 1fr 1fr 1.3fr 1fr">
+            <div>Customer</div><div>Region</div><div>ARR</div><div>Adoption</div><div>Health</div>
+        </div>
+        ${[['Volkswagen','Automotive','EMEA','€2.4M',72,'tag-g','Healthy'],
+           ['Space X',   'Aerospace', 'AMER','€1.1M',38,'tag-r','At Risk'],
+           ['Amazon',    'Retail',    'AMER','€4.7M',91,'tag-g','Healthy']].map(([n,ind,reg,arr,pct,t,lbl])=>`
+        <div class="d-table-row" style="grid-template-columns:2fr 1fr 1fr 1.3fr 1fr">
+            <div><div class="cust-name">${n}</div><div class="cust-meta">${ind}</div></div>
+            <div>${reg}</div><div style="font-weight:600">${arr}</div>
+            <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;${pct<50?'background:#e87722':''}"></div></div><span class="prog-pct">${pct}%</span></div>
+            <div><span class="tag ${t}">${lbl}</span></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function pgTeamPerformance() {
+    return `
+    <div class="page-title">Team Performance</div>
+    <div class="page-sub">Q3 2026</div>
+    <div class="d-table">
+        <div class="d-table-head" style="grid-template-columns:2fr 1fr .8fr 1fr 1fr">
+            <div>Team Member</div><div>Role</div><div>Customers</div><div>Pipeline</div><div>Quota %</div>
+        </div>
+        ${[['René Wirthmann','Senior AE','3','€8.2M','94%','tag-g'],
+           ['Maria Schmidt', 'AE',       '2','€3.5M','71%','tag-o'],
+           ['James Carter',  'CSM',      '5','€6.8M','110%','tag-g'],
+           ['Lisa Chen',     'AE',       '1','€1.2M','45%','tag-r']].map(([n,r,c,p,q,t])=>`
+        <div class="d-table-row" style="grid-template-columns:2fr 1fr .8fr 1fr 1fr">
+            <div class="cust-name">${n}</div>
+            <div style="color:var(--text-2)">${r}</div>
+            <div>${c}</div><div style="font-weight:600">${p}</div>
+            <div><span class="tag ${t}">${q}</span></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function pgReports() {
+    return `
+    <div class="page-title">Reports &amp; Analytics</div>
+    <div class="page-sub">Q3 2026</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        ${[['📊','Adoption Report',  'Q3 2026 adoption metrics'],
+           ['💼','Pipeline Report',  'Opportunities and regional forecast'],
+           ['🔄','Renewal Report',   'Upcoming renewals and churn risk'],
+           ['👥','Team Report',      'Quota attainment per team member'],
+           ['📋','Executive Summary','Portfolio health for leadership'],
+           ['🌐','Regional Report',  'EMEA and AMER breakdown']].map(([ic,ti,de])=>`
+        <div class="rep-card">
+            <div class="rep-icon">${ic}</div>
+            <div class="rep-title">${ti}</div>
+            <div class="rep-desc">${de}</div>
+            <button class="btn-outline">&#8681; Download PDF</button>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MANAGEMENT – Dashboard
+═══════════════════════════════════════════════════════════ */
+function getMgmtData() {
+    const base = KPI_BY_REGION[mgmtRegion] || KPI_BY_REGION['All Regions'];
+    const sFact = {'All Solution Areas':1,'Cloud ERP':0.45,'Business Network':0.22,'HR & Payroll':0.24,'Signavio':0.09}[mgmtSolution]||1;
+    const ssFact= {'All Sub-Solution Areas':1,'Private':0.52,'Public':0.35,'Hybrid':0.13}[mgmtSubSol]||1;
+    const f = sFact * ssFact;
+    const s = n => Math.max(0, Math.round(n * f));
+    const p = (n,d) => d>0 ? +((n/d)*100).toFixed(1) : 0;
+    const total = Math.max(1, s(base.total));
+    const preConf=s(base.preConf), preComp=s(base.preComp), postComp=s(base.postComp), bothComp=s(base.bothComp);
+    return {
+        total, preConf, preComp, postComp, bothComp,
+        prePct:p(preConf,total), preCompPct:p(preComp,total),
+        postPct:p(postComp,total), bothPct:p(bothComp,total),
+        preDetails: base.preDB.map(item=>{ const n=s(item.n),d=s(item.d); return {k:item.k,n,d,pct:p(n,d),red:item.red}; }),
+        postDetails:base.postDB.map(item=>{ const n=s(item.n),d=s(item.d); return {k:item.k,n,d,pct:p(n,d),red:item.red}; }),
+    };
+}
+
+function barsHtml(chartKey, maxV, h) {
+    const dim  = mgmtChartDims[chartKey]||'byRegion';
+    const items= CHART_DATA[chartKey][dim]||[];
+    const hl   = dim==='byRegion'&&mgmtRegion!=='All Regions'?mgmtRegion
+               : dim==='bySol'&&mgmtSolution!=='All Solution Areas'?mgmtSolution
+               : dim==='bySub'&&mgmtSubSol!=='All Sub-Solution Areas'?mgmtSubSol:null;
+    const barH = (h||90)-22;
+    return `<div style="display:flex;gap:6px;align-items:flex-end;height:${h||90}px;border-bottom:1px solid var(--border);padding:0 2px">
+        ${items.map(it=>{
+            const bh=Math.max(2,Math.round((it.v/maxV)*barH));
+            const clr=(!hl||it.k===hl)?'var(--primary)':'#b3d0f5';
+            return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;height:100%">
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:${barH}px;width:100%">
+                    <span style="font-size:11px;font-weight:700;margin-bottom:3px">${it.v}%</span>
+                    <div style="width:60%;height:${bh}px;background:${clr};border-radius:2px 2px 0 0"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-2);text-align:center;margin-top:4px;line-height:1.2">${it.l}</div>
+            </div>`;
+        }).join('')}
+    </div>`;
+}
+
+function chartTabs(chartKey) {
+    const cur=mgmtChartDims[chartKey]||'byRegion';
+    return [['byRegion','Region'],['bySol','Solution Area'],['bySub','Sub-Solution']].map(([k,lbl])=>
+        `<button onclick="setChartDim('${chartKey}','${k}')" style="padding:3px 9px;border:1px solid ${cur===k?'var(--primary)':'var(--border)'};border-radius:4px;font-size:11px;cursor:pointer;color:${cur===k?'#fff':'var(--text-2)'};background:${cur===k?'var(--primary)':'#fff'}">${lbl}</button>`
+    ).join('');
+}
+
+function pgMgmtDashboard() {
+    const d = getMgmtData();
+    const ddSel = `background:#fff url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath d=%22M0 0l5 6 5-6z%22 fill=%22%236a6d70%22/%3E%3C/svg%3E') no-repeat right 10px center`;
+    const mkDrop = (type, opts, cur) =>
+        `<select onchange="setMgmtFilter('${type}',this.value)" style="border:1px solid var(--border);border-radius:4px;padding:5px 28px 5px 10px;font-size:13px;font-family:inherit;color:var(--text-1);-webkit-appearance:none;appearance:none;${ddSel};cursor:pointer;min-width:160px">
+            ${opts.map(o=>`<option value="${o}" ${o===cur?'selected':''}>${o}</option>`).join('')}
+        </select>`;
+
+    const filterBar=`<div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:11px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Region ${mkDrop('region',['All Regions','APAC','Americas','EMEA','MEE'],mgmtRegion)}</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Solution Area ${mkDrop('solution',['All Solution Areas','Cloud ERP','Business Network','HR & Payroll','Signavio'],mgmtSolution)}</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)">Sub-Solution Area ${mkDrop('subsolution',['All Sub-Solution Areas','Private','Public','Hybrid'],mgmtSubSol)}</label>
+        <button onclick="resetMgmtFilters()" style="margin-left:auto;background:none;border:1px solid var(--border);padding:5px 14px;border-radius:4px;cursor:pointer;font-size:13px;color:var(--text-2)">Reset</button>
+    </div>`;
+
+    const kpiRow=`<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        ${[
+            ['TOTAL SUB-SOLUTION ACCOUNTS',d.total,''],
+            ['PRE-CLOSING CONFIRMED',d.preConf,d.prePct+'%'],
+            ['PRE-CLOSING COMPLETE',d.preComp,d.preCompPct+'%'],
+            ['POST-CLOSING COMPLETE',d.postComp,d.postPct+'%'],
+            ['BOTH COMPLETE',d.bothComp,d.bothPct+'%'],
+        ].map(([lbl,val,pct])=>`<div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
+            <div style="font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.3px;font-weight:600;margin-bottom:4px;line-height:1.3">${lbl}</div>
+            <div style="font-size:26px;font-weight:700;color:var(--text-1)">${val}</div>
+            ${pct?`<div style="font-size:12px;color:var(--text-2);margin-top:2px">${pct}</div>`:''}
+        </div>`).join('')}
+    </div>`;
+
+    const mkTiles=(tiles,cols)=>`<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px">
+        ${tiles.map(t=>`<div style="border:1px solid var(--border);border-radius:4px;padding:10px 12px">
+            <div style="font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.3px;font-weight:600;margin-bottom:3px;line-height:1.3">${t.k}</div>
+            <div style="font-size:20px;font-weight:700;color:${t.red&&t.pct<20?'#c5221f':'var(--primary)'}">${t.pct}%</div>
+            <div style="font-size:11px;color:var(--text-2);margin-top:1px">${t.n} / ${t.d}</div>
+        </div>`).join('')}
+    </div>`;
+
+    const sec=(title,sub,inner)=>`<div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+        ${sub?`<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px"><div><div style="font-size:13px;font-weight:700">${title}</div><div style="font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.4">${sub}</div></div><div style="display:flex;gap:4px">${inner.tabs}</div></div>${inner.chart}`
+            :`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:13px;font-weight:700">${title}</div><div style="display:flex;gap:4px">${inner.tabs||''}</div></div>${inner.content}`}
+    </div>`;
+
+    const redItems = [...d.preDetails.filter(t=>t.red&&t.pct<20).map(t=>({...t,section:'Pre-Closing Adoption Plan Details'})),
+                      ...d.postDetails.filter(t=>t.red&&t.pct<20).map(t=>({...t,section:'Post-Closing Adoption Plan Details'}))];
+    const jouleMsg = `I reviewed the dashboard for ${mgmtRegion.toLowerCase()==='all regions'?'all regions':mgmtRegion}. ${redItems.length} topic${redItems.length!==1?'s are':' is'} in red status and need${redItems.length===1?'s':''} attention:
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+            ${redItems.map(it=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;background:#fce9e7;border-left:3px solid #c5221f;border-radius:0 4px 4px 0;padding:7px 10px;gap:8px">
+                <div><div style="font-size:12px;font-weight:700">${it.k}</div><div style="font-size:11px;color:var(--text-2)">${it.section}</div><div style="font-size:11px;color:var(--text-2)">${it.n} / ${it.d}</div></div>
+                <div style="font-size:13px;font-weight:700;color:#c5221f;flex-shrink:0">${it.pct}%</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:10px;line-height:1.5">Red means under 20% of Sub-Solution Accounts are complete.</div>`;
+
+    return `
+    <div class="page-title">Management Dashboard</div>
+    <div class="page-sub">Global Adoption &amp; Consumption Platforms and Programs</div>
+    ${filterBar}
+    <div class="mgmt-layout">
+        <div class="mgmt-left">
+            ${kpiRow}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+                            <div><div style="font-size:13px;font-weight:700">Pre-Closing Confirmed</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">% of Sub-Solution Accounts with confirmed Pre-Closing Adoption Plan Details</div></div>
+                            <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">${chartTabs('preConf')}</div>
+                        </div>
+                        ${barsHtml('preConf',15,90)}
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="font-size:13px;font-weight:700;margin-bottom:10px">Pre-Closing Adoption Plan Details</div>
+                        ${mkTiles(d.preDetails,3)}
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="font-size:13px;font-weight:700">Value Drivers by Region</div>
+                            <div style="display:flex;gap:4px">${chartTabs('valDrv')}</div>
+                        </div>
+                        ${barsHtml('valDrv',95,90)}
+                    </div>
+                </div>
+                <div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+                            <div><div style="font-size:13px;font-weight:700">Post-Closing Complete</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">% of Sub-Solution Accounts with complete Post-Closing Adoption Plan Details</div></div>
+                            <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">${chartTabs('postComp')}</div>
+                        </div>
+                        ${barsHtml('postComp',10,90)}
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="font-size:13px;font-weight:700;margin-bottom:10px">Post-Closing Adoption Plan Details</div>
+                        ${mkTiles(d.postDetails,2)}
+                    </div>
+                    <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:14px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                            <div style="font-size:13px;font-weight:700">cACV Plan by Region</div>
+                            <div style="display:flex;gap:4px">${chartTabs('cacv')}</div>
+                        </div>
+                        ${barsHtml('cacv',20,90)}
+                    </div>
+                </div>
+            </div>
+        </div>
+        ${joulePanel(jouleMsg)}
+    </div>`;}
+
+/* ═══════════════════════════════════════════════════════════
+   HANDOVER MODAL
+═══════════════════════════════════════════════════════════ */
+function showMcpModal() {
+    document.getElementById('mcpSearchInput').value = '';
+    document.getElementById('mcpResults').innerHTML = '';
+    document.getElementById('mcpModal').classList.add('open');
+    setTimeout(() => document.getElementById('mcpSearchInput').focus(), 50);
+}
+function closeMcpModal() {
+    document.getElementById('mcpModal').classList.remove('open');
+}
+function runMcpSearch() {
+    const q = document.getElementById('mcpSearchInput').value.trim();
+    const res = document.getElementById('mcpResults');
+    if (!q) { res.innerHTML = '<span style="color:var(--text-2)">Please enter a customer name to search.</span>'; return; }
+    const DEMO = ['SAP SE','Microsoft','BMW Group','Siemens AG','Nestlé','Unilever','Shell','BASF','Deutsche Telekom','Bosch'];
+    const hits = DEMO.filter(n => n.toLowerCase().includes(q.toLowerCase()));
+    const list = hits.length ? hits : [q];
+    res.innerHTML = list.map(n => `<div onclick="this.parentElement.querySelectorAll('div').forEach(d=>d.style.background=''); this.style.background='#e8f1fb'; document.getElementById('mcpSearchInput').value='${n}'" style="padding:8px 10px;border-radius:4px;cursor:pointer;margin-bottom:2px">${n}</div>`).join('');
+}
+function addMcpCustomer() {
+    const name = document.getElementById('mcpSearchInput').value.trim();
+    const res  = document.getElementById('mcpResults');
+    if (!name) { res.innerHTML = '<span style="color:#c5221f">Please search and select a customer first.</span>'; return; }
+    if (CUSTOMERS.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+        res.innerHTML = '<span style="color:#b35900">This customer is already in your overview.</span>'; return;
+    }
+    const newIdx = CUSTOMERS.length;
+    const REGIONS   = ['EMEA','AMER','APAC','MEE'];
+    const INDUSTRIES = ['Manufacturing','Financial Services','Technology','Energy & Utilities','Retail','Healthcare','Telecommunications'];
+    const SOL_SETS  = [['Cloud ERP Private'],['Core HR and Payroll public'],['Business Network'],['Cloud ERP Private','Business Network'],['Core HR and Payroll public','Cloud ERP Private']];
+    const PARTNERS  = ['Accenture','Deloitte','Capgemini','BearingPoint','IBM'];
+    const CONTACTS  = ['Anna Weber','Thomas Müller','Sophie Laurent','James Carter','Yuki Tanaka'];
+    const VD_LIST   = ['Improve customer satisfaction','Increase operational efficiency','Accelerate digital transformation','Reduce total cost of ownership','Improve employee productivity'];
+    const STRATEGIES= ['Big bang go-live','Phased rollout','Regional go-lives planned','Parallel run'];
+
+    const region   = REGIONS[newIdx % REGIONS.length];
+    const industry = INDUSTRIES[newIdx % INDUSTRIES.length];
+    const solutions= SOL_SETS[newIdx % SOL_SETS.length];
+    const partner  = PARTNERS[newIdx % PARTNERS.length];
+    const contact  = CONTACTS[newIdx % CONTACTS.length];
+    const oppNum   = '030014' + String(1000 + newIdx).slice(1);
+
+    CUSTOMERS.push({ name, industry, region, opp: oppNum, solutions });
+
+    PLAN_DATA[newIdx] = {};
+    solutions.forEach((sol, si) => {
+        PLAN_DATA[newIdx][sol] = {
+            valueDriver: VD_LIST[(newIdx + si) % VD_LIST.length],
+            implementedBy: si % 2 === 0 ? 'Partner implementation' : 'SAP implementation',
+            sysPartner: partner, partnerContact: contact,
+            kickOff: '06/01/2027', projGoLive: '01/15/2028',
+            goLiveStrategy: STRATEGIES[(newIdx + si) % STRATEGIES.length],
+            aiUseCases: si % 2 === 0 ? 'Yes' : 'Under evaluation',
+            aiUnits: [{ sub: sol, unit: 'Joule for ' + sol.split(' ')[0], driver: VD_LIST[(newIdx + si + 1) % VD_LIST.length] }]
+        };
+    });
+
+    LPR_DATA[newIdx] = {};
+    solutions.forEach((sol, si) => {
+        const lprId = 'LPR-' + (60000 + newIdx * 100 + si);
+        LPR_DATA[newIdx][sol] = [{
+            id: lprId, name: sol.split(' ').slice(0,3).join(' ') + ' Suite',
+            goLiveStrategy: PLAN_DATA[newIdx][sol].goLiveStrategy,
+            onboardingType: 'Full onboarding', onboardingStatus: 'Not started',
+            implParty: 'Partner', implPartner: partner,
+            kickoff: '06/15/2027', plannedGoLive: '01/15/2028', confirmedGoLive: '',
+            implStatus: 'Green', statusReason: 'Customer onboarding initiated. All pre-checks passed.',
+            validatedHandover: 'No'
+        }];
+    });
+
+    CONS_DATA[newIdx] = solutions.map((sol, si) => ({
+        sub: sol, lprId: 'LPR-' + (60000 + newIdx * 100 + si),
+        lprName: sol.split(' ').slice(0,3).join(' ') + ' Suite',
+        quarter: 'Q1 2028', acv: 38000 + si * 9500,
+        predCacv: 38000 + si * 9500, finalMau: 5, plannedCacv: 38000 + si * 9500
+    }));
+
+    closeMcpModal();
+    selCust = null; page = 'customer-overview';
+    render();
+}
+
+function toDateInput(mmddyyyy) {
+    if (!mmddyyyy) return '';
+    const [m,d,y] = mmddyyyy.split('/');
+    return (y&&m&&d) ? `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : '';
+}
+function fromDateInput(yyyymmdd) {
+    if (!yyyymmdd) return '';
+    const [y,m,d] = yyyymmdd.split('-');
+    return (y&&m&&d) ? `${m}/${d}/${y}` : '';
+}
+function updatePlanDate(idx,sol,field,val) {
+    if (PLAN_DATA[idx] && PLAN_DATA[idx][sol]) PLAN_DATA[idx][sol][field] = fromDateInput(val);
+}
+function updateLprDate(idx,sol,li,field,val) {
+    if (LPR_DATA[idx] && LPR_DATA[idx][sol] && LPR_DATA[idx][sol][li]) LPR_DATA[idx][sol][li][field] = fromDateInput(val);
+}
+
+function setConsSub(v){ consSub=v; render(); }
+function setConsLpr(v){ consLpr=v; render(); }
+function setConsQtr(v){ consQtr=v; render(); }
+
+function applyMauAdj(rowId, baseMau, baseCacv, adjStr) {
+    const adj = parseFloat(adjStr) || 0;
+    const newMau  = Math.min(100, Math.max(0, baseMau + adj));
+    const newCacv = Math.round(baseCacv * (1 + adj / 100));
+    const mauCell  = document.getElementById('mau-'  + rowId);
+    const cacvCell = document.getElementById('cacv-' + rowId);
+    if (mauCell)  mauCell.textContent  = newMau + '%';
+    if (cacvCell) cacvCell.textContent = '$' + newCacv.toLocaleString();
+}
+
+function setLprLive(cb, lprId, lprName, custIdx) {
+    const body = document.getElementById('jouleBody');
+    if (!body) return;
+    if (cb.checked) {
+        const msg = `LPR is live: I added <strong>${lprId} &middot; ${lprName}</strong> to the Consumption Plan. <button class="btn-outline" style="margin-left:8px;padding:3px 10px;font-size:12px" onclick="openConsPlan(${custIdx})">Open Consumption Plan</button>`;
+        jouleMessages.push({ role:'ai', text: msg });
+        body.innerHTML += `<div class="joule-msg">${msg}</div>`;
+        body.scrollTop = body.scrollHeight;
+    }
+}
+
+function saveDemo(btn) {
+    btn.textContent = 'Saved (Demo Only)';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1200);
+}
+
+function showHandoverModal(idx, status) {
+    const c   = CUSTOMERS[idx];
+    const tab = selTab || c.solutions[0];
+    const d   = (PLAN_DATA[idx] && PLAN_DATA[idx][tab]) || {};
+    const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+    const rows = [
+        ['Value Drivers',                  d.valueDriver     || '—'],
+        ['Are AI use-cases included?',      d.aiUseCases      || '—'],
+        ['Implemented by',                  d.implementedBy   || '—'],
+        ['System implementation partner',   d.sysPartner      || '—'],
+        ['Partner contact',                 d.partnerContact  || '—'],
+        ['Kick-off date',                   d.kickOff         || '—'],
+        ['Projected Business Go-live Date', d.projGoLive      || '—'],
+        ['Go-live Strategy',                d.goLiveStrategy  || '—'],
+    ].map(([lbl,val])=>`
+    <div class="modal-row">
+        <span class="modal-lbl">${lbl}</span>
+        <span class="modal-val">${val}</span>
+    </div>`).join('');
+
+    const footer = status
+        ? `<button class="btn-primary" onclick="closeHandoverModal()">Close</button>`
+        : `<button class="btn-ghost" onclick="closeHandoverModal()">Adjust and close window</button>
+           <button class="btn-primary" onclick="sendToPostSales(${idx})">Send to Post Sales</button>`;
+
+    const meta = status
+        ? `Opportunity ${c.opp} &middot; Status: ${status}`
+        : `Opportunity ${c.opp} &middot; Generated ${today}`;
+
+    document.getElementById('handoverModalBox').innerHTML = `
+    <div class="modal-header">
+        <div class="modal-breadcrumb">UACP &middot; Pre-Close Adoption Plan Summary</div>
+        <div class="modal-cust-name">${c.name}</div>
+        <div class="modal-meta">${meta}</div>
+    </div>
+    <hr class="modal-divider">
+    <div class="modal-body">
+        <div class="modal-row-head">
+            <span style="font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.3px">Sub-Solution Area</span>
+            <span>${tab}</span>
+        </div>
+        ${rows}
+    </div>
+    <div class="modal-footer">${footer}</div>`;
+
+    document.getElementById('handoverModal').classList.add('open');
+}
+
+function closeHandoverModal(e) {
+    if (!e || e.target === document.getElementById('handoverModal'))
+        document.getElementById('handoverModal').classList.remove('open');
+}
+
+function sendToPostSales(idx) {
+    document.getElementById('handoverModal').classList.remove('open');
+    alert('Plan for ' + CUSTOMERS[idx].name + ' sent to Post Sales successfully.');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SINGLE ADOPTION PLAN (sections per sub-solution)
+═══════════════════════════════════════════════════════════ */
+function pgSingleAdoptionPlan(c, idx) {
+    const custDropdown = `<select class="cust-bar-sub-sel" style="min-width:160px" onchange="setSingleCustomer(this.value)">
+        <option value="">Select a customer...</option>
+        ${CUSTOMERS.map((cu,i)=>`<option value="${i}"${i===idx?' selected':''}>${cu.name}</option>`).join('')}
+    </select>`;
+
+    if (c === null) {
+        return `
+        <div class="page-title">Adoption Plan</div>
+        <div class="page-sub">Pre-close adoption details per sub-solution and LPR</div>
+        <div class="pc-layout">
+            <div class="pc-main"><div class="pc-block">
+                <div class="cust-bar">
+                    <span class="cust-bar-lbl">Customer</span>
+                    ${custDropdown}
+                </div>
+                <div style="padding:40px 24px;color:var(--text-2);font-size:13px;text-align:center">Select a customer above to view their Adoption Plan.</div>
+            </div></div>
+            ${joulePanel('Select a customer to get started. I will pre-fill the Adoption Plan details.')}
+        </div>`;
+    }
+
+    const ALL_SUBS = [
+        'All Sub-Solutions',
+        'Core HR and Payroll public',
+        'Business Network',
+        'Cloud ERP Private',
+        'SAP Payroll',
+        'Signavio Process Intelligence',
+        'SAP SuccessFactors',
+    ];
+    const solutionsToShow = singleSubFilter === 'All Sub-Solutions'
+        ? c.solutions
+        : c.solutions.filter(s => s === singleSubFilter);
+
+    const sel = (cur, opts) => {
+        const list = opts.includes(cur) ? opts : ['Select…',...opts,...(cur&&cur!=='Select…'?[cur]:[])];
+        return `<select>${list.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('')}</select>`;
+    };
+    const VALUE_DRIVER_OPTS=['Select…','Improve customer satisfaction','Improve user experience and interface solutions','Reduce compliance and risk management cost','Increase operational efficiency','Accelerate digital transformation','Reduce total cost of ownership','Improve employee productivity','Enable innovation and agility','Increase employee engagement','Reduce procurement and supply chain costs'];
+    const IMPL_BY_OPTS=['Select…','Partner implementation','SAP implementation','Customer self-implementation','Hybrid (SAP + Partner)','System integrator','Managed service provider','Shared services centre'];
+    const PARTNER_OPTS=['Select…','Accenture','BearingPoint','Capgemini','Deloitte','EY','IBM','Infosys','KPMG','NTT Data','PwC','T-Systems','TCS','Wipro'];
+    const GOLIVE_OPTS=['Select…','Regional go-lives planned','Big bang go-live','Phased rollout','Parallel run','Pilot first, then rollout','Agile incremental go-live','Hypercare-led go-live'];
+    const AI_OPTS=['Select…','Yes','No','Under evaluation','Planned for Phase 2','In scope but not yet defined','Excluded from current scope'];
+
+    const subFilterHtml = `<select class="cust-bar-sub-sel" onchange="setSingleSubFilter(this.value)">
+        ${ALL_SUBS.map(s=>`<option${s===singleSubFilter?' selected':''}>${s}</option>`).join('')}
+    </select>`;
+
+    const sections = solutionsToShow.length === 0
+        ? `<div style="padding:24px;color:var(--text-2);font-size:13px">No sub-solution matches the selected filter for this customer.</div>`
+        : solutionsToShow.map((sol, si) => {
+            const d    = (PLAN_DATA[idx]&&PLAN_DATA[idx][sol])||{};
+            const lprs = (LPR_DATA[idx]&&LPR_DATA[idx][sol])||[];
+            const lprRows = lprs.map(lpr => `
+            <div class="lpr-ph-row">
+                <span style="font-size:10px;color:var(--text-2)">&#9660;</span>
+                <span class="lpr-ph-name">LPR: ${lpr.id} &middot; ${lpr.name}</span>
+                <span class="lpr-ph-note">to be filled out by Post Sales Role</span>
+            </div>`).join('');
+            return `
+            <div class="single-sec">
+                <div class="single-sec-head" onclick="toggleSingleSection(${si})">
+                    <span>Sub-Solution Area: ${sol}</span>
+                    <span id="ssec-chev-${si}">&#9650;</span>
+                </div>
+                <div class="single-sec-body" id="ssec-body-${si}">
+                    <div class="form-grid">
+                        <div class="ff"><div class="ff-lbl">Value Drivers <span class="badge-ai">&#10022; Filled by AI/ML</span></div>${sel(d.valueDriver||'Select…',VALUE_DRIVER_OPTS)}</div>
+                        <div class="ff"><div class="ff-lbl">Implemented by <span class="badge-human">Human input required</span></div>${sel(d.implementedBy||'Select…',IMPL_BY_OPTS)}</div>
+                        <div class="ff"><div class="ff-lbl">System implementation partner <span class="badge-human">Human input required</span></div>${sel(d.sysPartner||'Select…',PARTNER_OPTS)}</div>
+                        <div class="ff"><div class="ff-lbl">Partner contact (person) <span class="badge-human">Human input required</span></div><input type="text" value="${d.partnerContact||''}"></div>
+                        <div class="ff"><div class="ff-lbl">Kick-off date <span class="badge-human">Human input required</span></div><div class="ff-date-wrap"><input type="date" value="${toDateInput(d.kickOff||'')}" onchange="updatePlanDate(${idx},'${sol.replace(/'/g,"\\'")}','kickOff',this.value)"></div></div>
+                        <div class="ff"><div class="ff-lbl">Projected Business Go-live Date <span class="badge-ai">&#10022; Filled by AI/ML</span></div><div class="ff-date-wrap"><input type="date" value="${toDateInput(d.projGoLive||'')}" onchange="updatePlanDate(${idx},'${sol.replace(/'/g,"\\'")}','projGoLive',this.value)"></div></div>
+                        <div class="ff"><div class="ff-lbl">Go-live Strategy <span class="badge-human">Human input required</span></div>${sel(d.goLiveStrategy||'Select…',GOLIVE_OPTS)}</div>
+                        <div class="ff"><div class="ff-lbl">Are AI use-cases included? <span class="badge-ai">&#10022; Filled by AI/ML</span></div>${sel(d.aiUseCases||'Select…',AI_OPTS)}</div>
+                    </div>
+                    ${lprRows}
+                    <div style="height:12px"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+    return `
+    <div class="page-title">Adoption Plan</div>
+    <div class="page-sub">Pre-close adoption details per sub-solution and LPR</div>
+    <div class="pc-layout">
+        <div class="pc-main">
+            <div class="pc-block">
+                <div class="cust-bar" style="flex-wrap:wrap;gap:10px 20px">
+                    <span class="cust-bar-lbl">Customer</span>
+                    ${custDropdown}
+                    <span class="cust-bar-lbl">Sub-Solution Area</span>
+                    ${subFilterHtml}
+                    <span class="cust-bar-opp" style="margin-left:auto">Opportunity: ${c.opp}</span>
+                </div>
+                <div style="padding:16px 24px 4px">${sections}</div>
+                <div class="form-actions">
+                    <div class="form-actions-left">
+                        <button class="btn-primary" onclick="showHandoverModal(${idx})">Handover to Post Sales</button>
+                        <button class="btn-primary">Upload additional information</button>
+                    </div>
+                    <button class="btn-primary" onclick="saveDemo(this)">Save</button>
+                </div>
+            </div>
+        </div>
+        ${joulePanel('I created the Adoption Plan for you and precalculated information like the go-live date or Value Driver. Please check.')}
+    </div>`;}
+
+/* ─── BOOT ───────────────────────────────────────────────── */
+render();
+</script>
+</body>
+</html>
