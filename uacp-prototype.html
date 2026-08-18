@@ -826,7 +826,12 @@ const CONS_DATA = {
     ],
 };
 
-/* Management dashboard data */
+const HANDOVER_STATUS = { 0:'Signed off', 1:'New', 2:'New' };
+const HANDOVER_META   = {
+    0:{ reqBy:'Julia Bergmann', sub:'10 Feb 2026' },
+    1:{ reqBy:'Tom Nkemdirim',  sub:'–' },
+    2:{ reqBy:'Priya Raghavan', sub:'–' },
+};
 const KPI_BY_REGION = {
     'All Regions':{total:230,preConf:9,preComp:43,postComp:4,bothComp:2,
         preDB:[{k:'VALUE DRIVERS',n:61,d:87,red:false},{k:'IMPLEMENTATION',n:86,d:87,red:false},{k:'PROJ. GO-LIVE',n:60,d:87,red:false},{k:'CONTACT IT',n:86,d:87,red:false},{k:'BUS. CONTACT PLAN',n:61,d:87,red:false},{k:'CONFIRMED PLAN',n:9,d:87,red:true}],
@@ -1219,7 +1224,7 @@ function pgPreClosePlan() {
             <div>Customer</div><div>Opportunity</div><div>Solutions</div><div>Progress</div><div>Status</div>
         </div>
         ${CUSTOMERS.map((c,i)=>{
-            const pct=[45,20,60][i],tc=['tag-o','tag-b','tag-g'][i],lbl=['In Progress','Planned','On Track'][i];
+            const pct=[25,0,50][i],tc=['tag-o','tag-b','tag-b'][i],lbl=['In Progress','Not Started','In Review'][i];
             return `
             <div class="d-table-row" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr;cursor:pointer" onclick="openPlan(${i})">
                 <div><div class="cust-name">${c.name}</div><div class="cust-meta">${c.industry} &middot; ${c.region}</div></div>
@@ -1233,30 +1238,29 @@ function pgPreClosePlan() {
 
 function pgPSPreCloseReview() {
     const acctRows = [
-        ['Volkswagen (VOLKSWAGEN)','0300110001','14 Jan 2026','Sarah Chen'],
-        ['Space X (SPACE-X)',      '0300120001','20 Feb 2026','Marcus Owusu'],
-        ['Amazon (AMAZON)',        '0300130001','08 Mar 2026','Elena Fischer'],
-    ].map(([name,opp,dt,by])=>`<tr>
-        <td style="font-weight:600">${name}</td>
-        <td style="color:var(--text-2)">${opp}</td>
-        <td style="color:var(--text-2)">${dt}</td>
-        <td style="color:var(--primary)">${by}</td>
+        { name:'Volkswagen (VOLKSWAGEN)', opps:[{id:'0300110001', dt:'14 Jan 2026'}], by:'Sarah Chen' },
+        { name:'Space X (SPACE-X)',       opps:[{id:'0300120001', dt:'20 Feb 2026'},{id:'0300120002', dt:'15 Apr 2026'}], by:'Marcus Owusu' },
+        { name:'Amazon (AMAZON)',         opps:[{id:'0300130001', dt:'08 Mar 2026'}], by:'Elena Fischer' },
+    ].map(({name,opps,by}) => `<tr>
+        <td style="font-weight:600;vertical-align:top">${name}</td>
+        <td style="color:var(--text-2);vertical-align:top">${opps.map(o=>`<div style="margin-bottom:3px">${o.id}</div>`).join('')}</td>
+        <td style="color:var(--text-2);vertical-align:top">${opps.map(o=>`<div style="margin-bottom:3px">${o.dt}</div>`).join('')}</td>
+        <td style="color:var(--primary);vertical-align:top">${by}</td>
     </tr>`).join('');
 
-    const hoRows = [
-        [0,'Volkswagen','0300110001',['Cloud ERP Private'],['LPR-10001 S/4HANA Cloud Private Edition','LPR-10002 SAP BTP Extension Suite'],'tag-g','Signed off','Julia Bergmann','10 Feb 2026'],
-        [1,'Space X','0300120001',['Core HR and Payroll public','Business Network'],['LPR-30001 SAP SuccessFactors HCM Suite','LPR-30002 SAP Payroll','LPR-20001 SAP Business Network'],'tag-o','New','Tom Nkemdirim','–'],
-        [2,'Amazon','0300130001',['Cloud ERP Private'],['LPR-10001 S/4HANA Cloud Private Edition','LPR-10002 SAP BTP Extension Suite'],'tag-o','New','Priya Raghavan','–'],
-    ].map(([idx,name,opp,sols,lprs,tagCls,status,reqBy,sub])=>`<tr>
-        <td><button class="btn-outline" onclick="showHandoverModal(${idx},'${status}')">Open</button></td>
-        <td style="font-weight:600">${name}</td>
-        <td style="color:var(--text-2)">${opp}</td>
-        <td>${sols.map(s=>`<span style="display:block;color:var(--primary);font-size:11px;margin-bottom:1px">&middot; ${s}</span>`).join('')}</td>
-        <td>${lprs.map(l=>`<span style="display:block;font-size:11px;color:var(--text-2);margin-bottom:1px;line-height:1.3">&middot; ${l}</span>`).join('')}</td>
-        <td><span class="tag ${tagCls}">${tagCls==='tag-g'?'&#9679; ':'&#9679; '}${status}</span></td>
-        <td style="color:var(--primary)">${reqBy}</td>
-        <td style="color:var(--text-2)">${sub}</td>
-    </tr>`).join('');
+    const hoRows = CUSTOMERS.map((c, idx) => {
+        const status    = HANDOVER_STATUS[idx] || 'New';
+        const tagCls    = status==='Signed off'?'tag-g':status==='Sent back'?'tag-r':'tag-o';
+        const dispLabel = status==='Signed off'?'Review Completed':status==='New'?'Awaiting Review':status;
+        const meta      = HANDOVER_META[idx]||{reqBy:'—',sub:'–'};
+        return `<tr>
+        <td style="font-weight:600">${c.name}</td>
+        <td style="color:var(--text-2)">${c.opp}</td>
+        <td>${c.solutions.map(s=>`<span style="display:block;color:var(--primary);font-size:11px;margin-bottom:1px">&middot; ${s}</span>`).join('')}</td>
+        <td><span class="tag ${tagCls}" style="cursor:pointer" onclick="showHandoverModal(${idx},'${status}')">&#9679; ${dispLabel}</span></td>
+        <td style="color:var(--primary)">${meta.reqBy}</td>
+        <td style="color:var(--text-2)">${meta.sub}</td>
+    </tr>`;}).join('');
 
     return `
     <div class="page-title">Pre-Close Adoption Plan</div>
@@ -1266,7 +1270,7 @@ function pgPSPreCloseReview() {
             <div class="s-card" style="margin-bottom:16px">
                 <div class="s-title">My account assignment</div>
                 <table class="simple-tbl">
-                    <thead><tr><th>Customer Name (ID)</th><th>Latest Opportunity</th><th>Assigned to me on</th><th>Assigned to me by</th></tr></thead>
+                    <thead><tr><th>Customer Name (ID)</th><th>Opportunity(-ies)</th><th>Assigned to me on</th><th>Assigned to me by</th></tr></thead>
                     <tbody>${acctRows}</tbody>
                 </table>
             </div>
@@ -1274,7 +1278,7 @@ function pgPSPreCloseReview() {
                 <div class="s-title">&#128203; Sales to Success: handed over documents from Pre-Close</div>
                 <div style="overflow-x:auto">
                     <table class="ho-tbl">
-                        <thead><tr><th></th><th>Customer</th><th>Opp #</th><th>Sub-Solution Areas</th><th>LPRs</th><th>Status</th><th>Requested by</th><th>Submitted</th></tr></thead>
+                        <thead><tr><th>Customer</th><th>Opp #</th><th>Sub-Solution Areas</th><th>Status</th><th>Review requested by</th><th>Submitted on</th></tr></thead>
                         <tbody>${hoRows}</tbody>
                     </table>
                 </div>
@@ -1518,6 +1522,9 @@ function pgPreClosePlanDetail(c, idx, isReview) {
                         ${isReview
                           ? `<button class="btn-primary">&#10003; Sign Off</button>
                              <button class="btn-ghost">Send back</button>`
+                          : HANDOVER_STATUS[idx] === 'Signed off'
+                          ? `<span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#4caf74;font-weight:600;padding:8px 0">&#10003; Handed over to Post Sales</span>
+                             <button class="btn-primary">Upload additional information</button>`
                           : `<button class="btn-primary" onclick="showHandoverModal(${idx})">Handover to Post Sales</button>
                              <button class="btn-primary">Upload additional information</button>`}
                     </div>
@@ -2249,7 +2256,36 @@ function showHandoverModal(idx, status) {
         <span class="modal-val">${val}</span>
     </div>`).join('');
 
-    const footer = status
+    const footer = status === 'New'
+        ? `<div style="width:100%">
+             <div style="margin-bottom:10px">
+               <label style="font-size:12px;font-weight:600;color:var(--text-2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Review Action</label>
+               <select id="hoActionDrop" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:inherit;color:var(--text-1)">
+                 <option value="">Select an action or comment…</option>
+                 <option>Plan information is complete and accurate</option>
+                 <option>Value drivers need revision</option>
+                 <option>Implementation partner not yet confirmed</option>
+                 <option>Go-live date is unrealistic for this scope</option>
+                 <option>AI use-cases require further scoping</option>
+                 <option>Partner contact information is incomplete</option>
+                 <option>Kick-off date conflicts with resource availability</option>
+                 <option>Risk assessment documentation is missing</option>
+                 <option>Solution scope requires re-validation with customer</option>
+                 <option>Customer stakeholder alignment not confirmed</option>
+                 <option>Additional management approval required</option>
+                 <option>Pending legal or contract review</option>
+               </select>
+             </div>
+             <div style="margin-bottom:14px">
+               <label style="font-size:12px;font-weight:600;color:var(--text-2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">Additional Comments</label>
+               <textarea id="hoCommentBox" rows="3" placeholder="Optional: add a comment for the Sales team…" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+             </div>
+             <div style="display:flex;gap:10px;justify-content:flex-end">
+               <button class="btn-ghost" onclick="sendBackHandover(${idx})">&#8617; Send Back with Comments</button>
+               <button class="btn-primary" onclick="signOffHandover(${idx})">&#10003; Sign Off</button>
+             </div>
+           </div>`
+        : status
         ? `<button class="btn-primary" onclick="closeHandoverModal()">Close</button>`
         : `<button class="btn-ghost" onclick="closeHandoverModal()">Adjust and close window</button>
            <button class="btn-primary" onclick="sendToPostSales(${idx})">Send to Post Sales</button>`;
@@ -2280,6 +2316,21 @@ function showHandoverModal(idx, status) {
 function closeHandoverModal(e) {
     if (!e || e.target === document.getElementById('handoverModal'))
         document.getElementById('handoverModal').classList.remove('open');
+}
+
+function signOffHandover(idx) {
+    HANDOVER_STATUS[idx] = 'Signed off';
+    HANDOVER_META[idx].sub = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('handoverModal').classList.remove('open');
+    if (page === 'preclose-plan') render();
+}
+
+function sendBackHandover(idx) {
+    const action  = (document.getElementById('hoActionDrop')  ||{}).value || '';
+    const comment = (document.getElementById('hoCommentBox')   ||{}).value || '';
+    HANDOVER_STATUS[idx] = 'Sent back';
+    document.getElementById('handoverModal').classList.remove('open');
+    if (page === 'preclose-plan') render();
 }
 
 function sendToPostSales(idx) {
