@@ -427,24 +427,22 @@
         /* ── Simple Table (Review page) ──────────────────── */
         .simple-tbl { border-collapse: collapse; width: 100%; }
         .simple-tbl th { padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-2); text-align: left; border-bottom: 2px solid var(--border); }
-        .simple-tbl td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .simple-tbl td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
         .simple-tbl tr:last-child td { border-bottom: none; }
         .simple-tbl tr:hover td { background: var(--hover-bg); }
 
         /* ── Handover Table ──────────────────────────────── */
-        .ho-tbl { border-collapse: collapse; width: 100%; min-width: 780px; }
+        .ho-tbl { border-collapse: collapse; width: 100%; min-width: 680px; }
         .ho-tbl th { padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--text-2); text-align: left; border-bottom: 1px solid var(--border); background: #fafafa; white-space: nowrap; }
-        .ho-tbl td { padding: 8px 10px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .ho-tbl td { padding: 10px 10px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
         .ho-tbl tr:last-child td { border-bottom: none; }
         .ho-tbl tr:hover td { background: var(--hover-bg); }
-        .ho-tbl td:nth-child(1) { width: 52px; }
-        .ho-tbl td:nth-child(2), .ho-tbl th:nth-child(2) { width: 11%; }
-        .ho-tbl td:nth-child(3), .ho-tbl th:nth-child(3) { width: 9%; }
-        .ho-tbl td:nth-child(4), .ho-tbl th:nth-child(4) { width: 13%; }
-        .ho-tbl td:nth-child(5), .ho-tbl th:nth-child(5) { width: 26%; }
+        .ho-tbl td:nth-child(1), .ho-tbl th:nth-child(1) { width: 18%; }
+        .ho-tbl td:nth-child(2), .ho-tbl th:nth-child(2) { width: 10%; }
+        .ho-tbl td:nth-child(3), .ho-tbl th:nth-child(3) { width: 34%; }
+        .ho-tbl td:nth-child(4), .ho-tbl th:nth-child(4) { width: 15%; }
+        .ho-tbl td:nth-child(5), .ho-tbl th:nth-child(5) { width: 14%; }
         .ho-tbl td:nth-child(6), .ho-tbl th:nth-child(6) { width: 9%; }
-        .ho-tbl td:nth-child(7), .ho-tbl th:nth-child(7) { width: 12%; }
-        .ho-tbl td:nth-child(8), .ho-tbl th:nth-child(8) { width: 10%; }
 
         /* ── Management layout ───────────────────────────── */
         .mgmt-layout { display: flex; gap: 16px; align-items: flex-start; }
