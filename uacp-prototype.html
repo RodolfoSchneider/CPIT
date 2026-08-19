@@ -1615,7 +1615,7 @@ function pgPostSalesOverview() {
             <div class="d-table" style="margin-bottom:18px">
                 <div class="d-table-head" style="grid-template-columns:2fr 1.3fr 1.6fr 1fr 1fr">
                     <div>Customer</div><div>Opportunity</div><div>Sub-Solutions</div>
-                    <div>Open Post-Close Adoption Plan</div><div>Open Consumption Plan</div>
+                    <div>Post-Close Plan</div><div>Consumption Plan</div>
                 </div>
                 ${custRows}
             </div>
@@ -1894,12 +1894,14 @@ function pgPortfolioOverview() {
         <div class="kpi-card"><div class="kpi-label">Pre-Close Pipeline</div><div class="kpi-val" style="color:var(--primary)">${fmt(prePipeline)}</div><div class="kpi-trend">Total value of active pre-close LPRs</div></div>
         <div class="kpi-card"><div class="kpi-label">Avg Consumption Rate</div><div class="kpi-val" style="color:var(--primary)">${avgConsRate}%</div><div class="kpi-trend">Actual vs planned cACV across all LPRs</div></div>
     </div>
-    <div class="s-card">
-        <div class="s-title">Customer Portfolio</div>
+    <div class="s-card" style="padding:0">
+        <div style="padding:16px 24px 0"><div class="s-title">Customer Portfolio</div></div>
+        <div class="d-table" style="border:none;border-top:1px solid var(--border);border-radius:0">
         <div class="d-table-head" style="grid-template-columns:1.4fr .6fr 1.6fr 1fr 1.4fr 1.4fr .8fr">
             <div>Customer</div><div>Region</div><div>Sub-Solutions</div><div>Pre-Close Pipeline</div><div>Adoption Rate</div><div>Consumption Rate</div><div>Health</div>
         </div>
         ${custRows}
+        </div>
     </div>`;
 }
 
